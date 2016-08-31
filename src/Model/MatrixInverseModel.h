@@ -14,8 +14,6 @@ private:
     std::vector<double> B;
 
     void Initialize(const std::string &input_line) {
-	srand(0);
-
 	// Input line should have a single number containing
 	// number of coordinates (# of rows/columns in square matrix).
 	std::stringstream input(input_line);
@@ -95,7 +93,6 @@ public:
     }
 
     void SetUp(const std::vector<Datapoint *> &datapoints) override {
-	srand(0);
 	// Normalize the rows formed by the datapoint.
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    double sum_sqr = 0;
