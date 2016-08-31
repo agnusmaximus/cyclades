@@ -14,6 +14,7 @@ private:
     std::vector<double> B;
 
     void Initialize(const std::string &input_line) {
+	srand(0);
 
 	// Input line should have a single number containing
 	// number of coordinates (# of rows/columns in square matrix).
@@ -94,6 +95,7 @@ public:
     }
 
     void SetUp(const std::vector<Datapoint *> &datapoints) override {
+	srand(0);
 	// Normalize the rows formed by the datapoint.
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    double sum_sqr = 0;
@@ -152,7 +154,7 @@ public:
 	    sum_sqr += model[i] * model[i];
 	}
 
-#pragma omp parallel for num_threads(FLAGS_n_threads) reduction(+:loss)
+	//#pragma omp parallel for num_threads(FLAGS_n_threads) reduction(+:loss)
 	for (int i = 0; i < datapoints.size(); i++) {
 	    double ai_t_x = 0;
 	    double first = sum_sqr / (double)n_coords * lambda;

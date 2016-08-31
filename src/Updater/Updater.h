@@ -41,15 +41,16 @@ protected:
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = order - bookkeeping[index] - 1;
+	    if (diff < 0) diff = 0;
 	    double geom_sum = 0;
-	    double mu = Mu(i, g);
+	    double mu = Mu(index, g);
 	    if (mu != 0) {
-		geom_sum = ((1 - pow(mu, diff+1)) / (1 - mu)) - 1;
+		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
 		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
-		    - Nu(i, j, g) * geom_sum;
+		    - Nu(index, j, g) * geom_sum;
 	    }
 	}
     }
