@@ -17,21 +17,18 @@ protected:
     virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
     virtual double Mu(int coordinate) = 0;
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
-	g->datapoint = datapoint;
-	model->PrecomputeCoefficients(datapoint, g);
-    }
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    double mu = Mu(i);
+	    double mu = Mu(index);
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] = (1 - mu) * model_data[index * coordinate_size + j]
-		    - Nu(i, j)
-		    + H(i, j, g);
+		    - Nu(index, j)
+		    + H(index, j, g);
 	    }
 	}
     }
