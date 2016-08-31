@@ -83,7 +83,6 @@ class WordEmbeddingsModel : public Model {
     }
 
     void EpochFinish() {
-	return;
 	// Update C based on C_sum_mult.
 	double C_A = 0, C_B = 0;
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
@@ -110,7 +109,7 @@ class WordEmbeddingsModel : public Model {
 	return model;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, int thread) {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
@@ -123,6 +122,11 @@ class WordEmbeddingsModel : public Model {
 		(model[coord1*w2v_length+i] + model[coord2*w2v_length+i]);
 	}
 	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
+
+	// Do some extra computation for C.
+	int index = c_thread_index_tracker[thread]++;
+	c_sum_mult1[thread][index] = weight * (log(weight) - norm);
+	c_sum_mult2[thread][index] = weight;
     }
 
     virtual double Mu(int coordinate) {
@@ -134,7 +138,9 @@ class WordEmbeddingsModel : public Model {
     }
 
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return 0;
+	int c1 = g->datapoint->GetCoordinates()[0];
+	int c2 = g->datapoint->GetCoordinates()[1];
+	return -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+index_into_coordinate_vector] + model[c2*w2v_length+index_into_coordinate_vector]));
     }
 
     virtual bool NeedsCatchup() {

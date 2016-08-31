@@ -8,9 +8,9 @@ class SGDUpdater : public Updater {
 protected:
     std::vector<double> nu, mu, h;
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, int thread) {
 	g->datapoint = datapoint;
-	model->PrecomputeCoefficients(datapoint, g);
+	model->PrecomputeCoefficients(datapoint, g, thread);
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
