@@ -34,6 +34,7 @@ protected:
     }
 
     virtual void CatchUp(Model *model, Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
+	if (!model->NeedsCatchup()) return;
 	// Optimize by quick returning if nu and mu are zero.
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();

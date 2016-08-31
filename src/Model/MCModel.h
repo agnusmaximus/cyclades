@@ -83,7 +83,7 @@ class MCModel : public Model {
 	return rlength;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
@@ -98,15 +98,19 @@ class MCModel : public Model {
 	g->coeffs[0] = coeff;
     }
 
-    double Mu(int coordinate) {
+    bool NeedsCatchup() override {
+	return false;
+    }
+
+    double Mu(int coordinate) override {
 	return 0;
     }
 
-    double Nu(int coordinate, int index_into_coordinate_vector) {
+    double Nu(int coordinate, int index_into_coordinate_vector) override {
 	return 0;
     }
 
-    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) override {
 	return g->coeffs[0] * model[coordinate * rlength + index_into_coordinate_vector];
     }
 };

@@ -41,6 +41,7 @@ class Model {
     virtual double Mu(int coordinate) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
+    virtual bool NeedsCatchup() { return true; }
 };
 
 #endif
