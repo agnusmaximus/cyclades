@@ -14,8 +14,8 @@ protected:
 
 
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
-    virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
-    virtual double Mu(int coordinate) = 0;
+    virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
+    virtual double Mu(int coordinate, Gradient *g) = 0;
 
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, int thread) = 0;
 
@@ -24,10 +24,10 @@ protected:
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    double mu = Mu(index);
+	    double mu = Mu(index, g);
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] = (1 - mu) * model_data[index * coordinate_size + j]
-		    - Nu(index, j)
+		    - Nu(index, j, g)
 		    + H(index, j, g);
 	    }
 	}
@@ -42,13 +42,13 @@ protected:
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = order - bookkeeping[index] - 1;
 	    double geom_sum = 0;
-	    if (Mu(i) != 0) {
-		geom_sum = ((1 - pow(Mu(i), diff+1)) / (1 - Mu(i))) - 1;
+	    if (Mu(i, g) != 0) {
+		geom_sum = ((1 - pow(Mu(i, g), diff+1)) / (1 - Mu(i, g))) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
-		    pow(1 - Mu(i), diff) * model_data[index * coordinate_size + j]
-		    - Nu(i, j) * geom_sum;
+		    pow(1 - Mu(i, g), diff) * model_data[index * coordinate_size + j]
+		    - Nu(i, j, g) * geom_sum;
 	    }
 	}
     }

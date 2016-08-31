@@ -19,5 +19,7 @@ ifdef CLANG_OMP++
     CC=clang-omp++
 endif
 
+FILES=src/main.cpp src/Gradient/Gradient.cpp
+
 all:
-	$(CC) $(FLAGS) src/main.cpp $(LIBS) -o cyclades
+	$(CC) $(FLAGS) $(FILES) $(LIBS) -o cyclades

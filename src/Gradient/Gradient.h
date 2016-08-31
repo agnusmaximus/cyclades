@@ -1,10 +1,15 @@
 #ifndef _GRADIENT_
 #define _GRADIENT_
 
+#include <iostream>
+#include <vector>
+
 class Model;
+class Datapoint;
 
 class Gradient {
  public:
+    std::vector<double> nu, mu, h;
     std::vector<double> coeffs;
     Datapoint *datapoint;
 
@@ -16,9 +21,7 @@ class Gradient {
 	datapoint = NULL;
     }
 
-    virtual void SetUp(Model *model) {
-	Clear();
-    }
+    void SetUp(Model *model);
 };
 
 #endif
