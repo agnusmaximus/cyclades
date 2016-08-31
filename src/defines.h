@@ -19,9 +19,6 @@
 #include "Datapoint/Datapoint.h"
 #include "Gradient/Gradient.h"
 #include "DatasetReader.h"
-#include "Updater/Updater.h"
-#include "Updater/SGDUpdater.h"
-#include "Updater/MinibatchSGDUpdater.h"
 #include "DatapointPartitions/DatapointPartitions.h"
 #include "Partitioner/Partitioner.h"
 #include "Partitioner/BasicPartitioner.h"
@@ -79,7 +76,6 @@ DEFINE_bool(print_partition_time, false, "Should print time taken to distribute 
 DEFINE_bool(cache_efficient_hogwild_trainer, false, "Hogwild training method with cache friendly datapoint ordering (parallel).");
 DEFINE_bool(cyclades_trainer, false, "Cyclades training method (parallel).");
 DEFINE_bool(hogwild_trainer, false, "Hogwild training method (parallel).");
-DEFINE_bool(minibatch_trainer, false, "Minibatch training method (parallel).");
 
 // Flags for updating types.
 DEFINE_bool(sgd, false, "Use the hogwild-style SGD update method.");
@@ -103,6 +99,9 @@ DEFINE_double(tune_stepfactor, 10, "Factor of tuning stepsize.");
 // MISC flags.
 DEFINE_int32(random_range, 100, "Range of random numbers for initializing the model.");
 
+#include "Updater/Updater.h"
+#include "Updater/SGDUpdater.h"
+
 #include "Partitioner/CycladesPartitioner.h"
 #include "Partitioner/DFSCachePartitioner.h"
 //#include "Partitioner/GraphCutsCachePartitioner.h"
@@ -110,30 +109,23 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 #include "Trainer/CycladesTrainer.h"
 #include "Trainer/HogwildTrainer.h"
 #include "Trainer/CacheEfficientHogwildTrainer.h"
-#include "Trainer/MinibatchTrainer.h"
 
 #include "Datapoint/MCDatapoint.h"
-#include "Gradient/MCGradient.h"
 #include "Model/MCModel.h"
 
-#include "Datapoint/DenseLSDatapoint.h"
-#include "Gradient/DenseLSGradient.h"
+/*#include "Datapoint/DenseLSDatapoint.h"
 #include "Model/DenseLSModel.h"
 
 #include "Datapoint/WordEmbeddingsDatapoint.h"
-#include "Gradient/WordEmbeddingsGradient.h"
 #include "Model/WordEmbeddingsModel.h"
 
 #include "Datapoint/MatrixInverseDatapoint.h"
-#include "Gradient/MatrixInverseGradient.h"
 #include "Model/MatrixInverseModel.h"
 
 #include "Datapoint/LSDatapoint.h"
-#include "Gradient/LSGradient.h"
 #include "Model/LSModel.h"
 
 #include "Datapoint/GibbsDatapoint.h"
-#include "Gradient/GibbsGradient.h"
-#include "Model/IsingGibbsModel.h"
+#include "Model/IsingGibbsModel.h"*/
 
 #endif

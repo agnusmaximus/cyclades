@@ -8,7 +8,7 @@ DEFINE_int32(rlength, 100, "Length of vector in matrix completion.");
 
 class MCModel : public Model {
  private:
-    double *model;
+    std::vector<double> model;
     int n_users;
     int n_movies;
     int rlength;
@@ -28,11 +28,7 @@ class MCModel : public Model {
 	rlength = FLAGS_rlength;
 
 	// Allocate memory.
-	model = new double[(n_users+n_movies) * rlength];
-	if (!model) {
-	    std::cerr << "MCModel: Error allocating model" << std::endl;
-	    exit(0);
-	}
+	model.resize((n_users+n_movies) * rlength);
 
 	// Initialize private model.
 	InitializePrivateModel();
@@ -44,7 +40,6 @@ class MCModel : public Model {
     }
 
     ~MCModel() {
-	delete model;
     }
 
     void SetUp(const std::vector<Datapoint *> &datapoints) override {
@@ -76,40 +71,37 @@ class MCModel : public Model {
 	return loss / datapoints.size();
     }
 
-    void ComputeGradient(Datapoint * datapoint, Gradient *gradient, int thread_num) override {
-	MCGradient *mc_gradient = (MCGradient *)gradient;
+    std::vector<double> & ModelData() {
+	return model;
+    }
+
+    int NumParameters() override {
+	return n_users + n_movies;
+    }
+
+    int CoordinateSize() override {
+	return rlength;
+    }
+
+    void Mu(Datapoint *datapoint, double &mu_out) {
+	mu_out = 0;
+    }
+
+    void Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
+	// nu_out = 0, which is assumed. So do nothing.
+    }
+
+    void H(Datapoint *datapoint, double &h_out) {
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	int user_coordinate = coordinates[0];
 	int movie_coordinate = coordinates[1];
 	double label = labels[0];
-	mc_gradient->gradient_coefficient = 0;
-	mc_gradient->datapoint = datapoint;
+	h_out = 0;
 	for (int i = 0; i < rlength; i++) {
-	    mc_gradient->gradient_coefficient += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
+	    h_out += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
 	}
-	mc_gradient->gradient_coefficient -= label;
-    }
-
-    void ApplyGradient(Gradient *gradient) override {
-	MCGradient *mc_gradient = (MCGradient *)gradient;
-	double gradient_coefficient = mc_gradient->gradient_coefficient;
-	Datapoint *datapoint = mc_gradient->datapoint;
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	int user_coordinate = coordinates[0];
-	int movie_coordinate = coordinates[1];
-	for (int i = 0; i < rlength; i++) {
-	    double new_user_value = model[user_coordinate*rlength+i] -
-		FLAGS_learning_rate * gradient_coefficient * model[movie_coordinate*rlength+i];
-	    double new_movie_value = model[movie_coordinate*rlength+i] -
-		FLAGS_learning_rate * gradient_coefficient * model[user_coordinate*rlength+i];
-	    model[user_coordinate*rlength+i] = new_user_value;
-	    model[movie_coordinate*rlength+i] = new_movie_value;
-	}
-    }
-
-    int NumParameters() override {
-	return n_users + n_movies;
+	h_out -= label;
     }
 };
 

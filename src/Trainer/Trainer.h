@@ -16,7 +16,6 @@ struct TrainStatistics {
 
 typedef struct TrainStatistics TrainStatistics;
 
-template<class GRADIENT_CLASS>
 class Trainer {
 protected:
 
@@ -60,7 +59,7 @@ public:
     virtual ~Trainer() {}
 
     // Main training method.
-    virtual TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater<GRADIENT_CLASS> *updater) = 0;
+    virtual TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) = 0;
 };
 
 #endif

@@ -1,13 +1,12 @@
 #ifndef _HOGWILD_TRAINER_
 #define _HOGWILD_TRAINER_
 
-template<class GRADIENT_CLASS>
-class HogwildTrainer : public Trainer<GRADIENT_CLASS> {
+class HogwildTrainer : public Trainer {
 public:
     HogwildTrainer() {}
     ~HogwildTrainer() {}
 
-    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater<GRADIENT_CLASS> *updater) override {
+    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
 	// Partition.
 	BasicPartitioner partitioner;
 	Timer partition_timer;
@@ -57,7 +56,7 @@ public:
 		int batch = 0; // Hogwild only has 1 batch.
 		for (int index_count = 0; index_count < partitions.NumDatapointsInBatch(thread, batch); index_count++) {
 		    int index = per_batch_datapoint_order[thread][batch][index_count];
-		    updater->UpdateWrapper(model, partitions.GetDatapoint(thread, batch, index), thread);
+		    updater->Update(model, partitions.GetDatapoint(thread, batch, index), thread);
 		}
 	    }
 	    updater->EpochFinish();

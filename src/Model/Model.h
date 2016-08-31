@@ -18,25 +18,6 @@ class Model {
     // Do some set up with the model given partitioning scheme before running the trainer.
     virtual void SetUpWithPartitions(DatapointPartitions &partitions) {}
 
-    // Compute and return a gradient. (represented as a void *, so it can be anything).
-    // Thread num is the thread number executing the gradient computation.
-    virtual void ComputeGradient(Datapoint *, Gradient *gradient, int thread_num) {
-	std::cerr << "Model: ComputeGradient is not implemented" << std::endl;
-	exit(0);
-    }
-
-    // Apply gradient to model.
-    virtual void ApplyGradient(Gradient *gradient) {
-	std::cerr << "Model: ApplyGradient is not implemented" << std::endl;
-	exit(0);
-    }
-
-    // The catch-up method to update sparse coordinates before updating
-    // them again. For denser problems this is necessary.
-    // Datapoint order is passed (rather than directly accessed from datapoint)
-    // since catching up at the end of an epoch requires a different order (Order N).
-    virtual void CatchUp(Datapoint *datapoint, int datapoint_order, std::vector<int> &bookkeeping) {}
-
     // Do any sort of extra computation at the beginning of an epoch.
     virtual void EpochBegin() {}
 
@@ -45,6 +26,19 @@ class Model {
 
     // Return the number of parameters of the model.
     virtual int NumParameters() = 0;
+
+    // Return the size (the # of doubles) of a single coordinate.
+    virtual int CoordinateSize() = 0;
+
+    // Return data to actual model.
+    virtual std::vector<double> & ModelData() = 0;
+
+    // The following are for updates of the form:
+    // x_j = (1 - mu_j)x_j - nu_j + h_ij*x_S_i
+    // Where h_ij = 0 for j not in S_i.
+    virtual void Mu(Datapoint *datapoint, double &mu_out) = 0;
+    virtual void Nu(Datapoint *datapoint, std::vector<double> &nu_out) = 0;
+    virtual void H(Datapoint *datapoint, double &h_out) = 0;
 };
 
 #endif

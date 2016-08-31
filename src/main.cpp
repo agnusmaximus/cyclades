@@ -4,7 +4,7 @@
 #include "defines.h"
 #include <iomanip>
 
-template<class MODEL_CLASS, class DATAPOINT_CLASS, class GRADIENT_CLASS>
+template<class MODEL_CLASS, class DATAPOINT_CLASS>
 TrainStatistics RunOnce() {
     // Initialize model and datapoints.
     Model *model;
@@ -13,12 +13,9 @@ TrainStatistics RunOnce() {
     model->SetUp(datapoints);
 
     // Create updater.
-    Updater<GRADIENT_CLASS> *updater = NULL;
+    Updater *updater = NULL;
     if (FLAGS_sgd) {
-	updater = new SGDUpdater<GRADIENT_CLASS>(model, datapoints, FLAGS_n_threads);
-    }
-    else if (FLAGS_minibatch_sgd) {
-	updater = new MinibatchSGDUpdater<GRADIENT_CLASS>(model, datapoints, FLAGS_n_threads);
+	updater = new SGDUpdater(model, datapoints, FLAGS_n_threads);
     }
     if (!updater) {
 	std::cerr << "Main: updater class not chosen." << std::endl;
@@ -26,18 +23,15 @@ TrainStatistics RunOnce() {
     }
 
     // Create trainer depending on flag.
-    Trainer<GRADIENT_CLASS> *trainer = NULL;
+    Trainer *trainer = NULL;
     if (FLAGS_cache_efficient_hogwild_trainer) {
-	trainer = new CacheEfficientHogwildTrainer<GRADIENT_CLASS>();
+	trainer = new CacheEfficientHogwildTrainer();
     }
     if (FLAGS_cyclades_trainer) {
-	trainer = new CycladesTrainer<GRADIENT_CLASS>();
+	trainer = new CycladesTrainer();
     }
     else if (FLAGS_hogwild_trainer) {
-	trainer = new HogwildTrainer<GRADIENT_CLASS>();
-    }
-    else if (FLAGS_minibatch_trainer) {
-	trainer = new MinibatchTrainer<GRADIENT_CLASS>();
+	trainer = new HogwildTrainer();
     }
     if (!trainer) {
 	std::cerr << "Main: training method not chosen." << std::endl;
@@ -60,7 +54,7 @@ TrainStatistics RunOnce() {
 }
 
 // Method to tune the learning rate.
-template<class MODEL_CLASS, class DATAPOINT_CLASS, class GRADIENT_CLASS>
+template<class MODEL_CLASS, class DATAPOINT_CLASS>
 void TuneLearningRate() {
 
     double best_stepsize = -1;
@@ -68,7 +62,7 @@ void TuneLearningRate() {
 
     for (double cur_stepsize = FLAGS_tune_lr_upper_bound; cur_stepsize >= FLAGS_tune_lr_lower_bound; cur_stepsize /= FLAGS_tune_stepfactor) {
 	FLAGS_learning_rate = cur_stepsize;
-	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS, GRADIENT_CLASS>();
+	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
 	std::cout << "Trainer: (learning_rate: " << cur_stepsize << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
 	if (cur_stats.losses[cur_stats.losses.size()-1] < best_score) {
 	    best_score = cur_stats.losses[cur_stats.losses.size()-1];
@@ -78,7 +72,7 @@ void TuneLearningRate() {
     double increment = (best_stepsize * FLAGS_tune_stepfactor - best_stepsize / FLAGS_tune_stepfactor) / FLAGS_tune_stepfactor;
     for (double cur_stepsize = best_stepsize / FLAGS_tune_stepfactor; cur_stepsize < best_stepsize * FLAGS_tune_stepfactor; cur_stepsize += increment) {
 	FLAGS_learning_rate = cur_stepsize;
-	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS, GRADIENT_CLASS>();
+	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
 	std::cout << "Trainer: (learning_rate: " << cur_stepsize << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
 	if (cur_stats.losses[cur_stats.losses.size()-1] < best_score) {
 	    best_score = cur_stats.losses[cur_stats.losses.size()-1];
@@ -88,35 +82,35 @@ void TuneLearningRate() {
     std::cout << "Best stepsize: " << best_stepsize << " Lowest loss: " << best_score << std::endl;
 }
 
-template<class MODEL_CLASS, class DATAPOINT_CLASS, class GRADIENT_CLASS>
+template<class MODEL_CLASS, class DATAPOINT_CLASS>
 void Run() {
     if (!FLAGS_tune_learning_rate) {
-	TrainStatistics stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS, GRADIENT_CLASS>();
+	TrainStatistics stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
     }
     else {
 	// Tune the learning rate.
-	TuneLearningRate<MODEL_CLASS, DATAPOINT_CLASS, GRADIENT_CLASS>();
+	TuneLearningRate<MODEL_CLASS, DATAPOINT_CLASS>();
     }
 }
 
 int main(int argc, char **argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     if (FLAGS_matrix_completion) {
-	Run<MCModel, MCDatapoint, MCGradient>();
+	Run<MCModel, MCDatapoint>();
     }
-    else if (FLAGS_dense_least_squares) {
-	Run<DenseLSModel, DenseLSDatapoint, DenseLSGradient>();
+/*else if (FLAGS_dense_least_squares) {
+	Run<DenseLSModel, DenseLSDatapoint>();
     }
     else if (FLAGS_word_embeddings) {
-	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint, WordEmbeddingsGradient>();
+	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint>();
     }
     else if (FLAGS_matrix_inverse) {
-	Run<MatrixInverseModel, MatrixInverseDatapoint, MatrixInverseGradient>();
+	Run<MatrixInverseModel, MatrixInverseDatapoint>();
     }
     else if (FLAGS_least_squares) {
-	Run<LSModel, LSDatapoint, LSGradient>();
+	Run<LSModel, LSDatapoint>();
     }
     else if (FLAGS_ising_gibbs) {
-	Run<IsingGibbsModel, GibbsDatapoint, GibbsGradient>();
-    }
+	Run<IsingGibbsModel, GibbsDatapoint>();
+	}*/
 }

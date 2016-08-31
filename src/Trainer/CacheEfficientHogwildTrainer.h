@@ -1,13 +1,12 @@
 #ifndef _CACHE_EFFICIENT_HOGWILD_TRAINER_
 #define _CACHE_EFFICIENT_HOGWILD_TRAINER_
 
-template<class GRADIENT_CLASS>
-class CacheEfficientHogwildTrainer : public Trainer<GRADIENT_CLASS> {
+class CacheEfficientHogwildTrainer : public Trainer {
 public:
     CacheEfficientHogwildTrainer() {}
     ~CacheEfficientHogwildTrainer() {}
 
-    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater<GRADIENT_CLASS> *updater) override {
+    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
 	// Partition.
 	DFSCachePartitioner partitioner;
 	Timer partition_timer;
@@ -31,7 +30,7 @@ public:
 	    for (int thread = 0; thread < FLAGS_n_threads; thread++) {
 		for (int batch = 0; batch < partitions.NumBatches(); batch++) {
 		    for (int index = 0; index < partitions.NumDatapointsInBatch(thread, batch); index++) {
-			updater->UpdateWrapper(model, partitions.GetDatapoint(thread, batch, index), thread);
+			updater->Update(model, partitions.GetDatapoint(thread, batch, index), thread);
 		    }
 		}
 	    }

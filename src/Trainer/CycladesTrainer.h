@@ -1,8 +1,7 @@
 #ifndef _CYCLADES_TRAINER_
 #define _CYCLADES_TRAINER_
 
-template<class GRADIENT_CLASS>
-class CycladesTrainer : public Trainer<GRADIENT_CLASS> {
+class CycladesTrainer : public Trainer {
 private:
     int *thread_batch;
 
@@ -49,7 +48,7 @@ public:
 	delete [] thread_batch;
     }
 
-    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater<GRADIENT_CLASS> *updater) override {
+    TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
 	// Partitions.
 	CycladesPartitioner partitioner(model);
 	Timer partition_timer;
@@ -115,7 +114,7 @@ public:
 		    WaitForThreadsTilBatch(thread, batch_count);
 		    for (int index_count = 0; index_count < partitions.NumDatapointsInBatch(thread, batch); index_count++) {
 			int index = per_batch_datapoint_order[thread][batch][index_count];
-			updater->UpdateWrapper(model, partitions.GetDatapoint(thread, batch, index), thread);
+			updater->Update(model, partitions.GetDatapoint(thread, batch, index), thread);
 		    }
 		}
 	    }
