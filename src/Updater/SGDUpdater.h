@@ -2,22 +2,25 @@
 #define _SGD_UPDATER_
 
 #include "Updater.h"
-#include "../Gradient/LinearGradient.h"
+#include "../Gradient/Gradient.h"
 
 class SGDUpdater : public Updater {
-private:
+protected:
 
-    void ComputeGradient(Model *model, Datapoint *datapoint, LinearGradient *g) {
-	g->nu_zero = model->Nu(datapoint, g->nu);
-	g->mu_zero = model->Mu(datapoint, g->mu);
-	g->h_zero = model->H(datapoint, g->h);
-	if (!g->nu_zero) {
-	    for (int i = 0; i < g->nu.size(); i++) {
-		g->nu[i] *= FLAGS_learning_rate;
-	    }
-	}
-	g->mu *= FLAGS_learning_rate;
-	g->h *= -FLAGS_learning_rate;
+    void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
+	model->PrecomputeCoefficients(datapoint, g);
+    }
+
+    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+	return -FLAGS_learning_rate * model->H(coordinate, index_into_coordinate_vector, g);
+    }
+
+    double Nu(int coordinate, int index_into_coordinate_vector) {
+	return model->Nu(coordinate, index_into_coordinate_vector) * FLAGS_learning_rate;
+    }
+
+    double Mu(int coordinate) {
+	return model->Mu(coordinate) * FLAGS_learning_rate;
     }
 
  public:

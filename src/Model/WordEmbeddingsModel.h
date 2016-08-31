@@ -9,7 +9,7 @@ DEFINE_int32(vec_length, 30, "Length of word embeddings vector in w2v.");
 
 class WordEmbeddingsModel : public Model {
  private:
-    double *model;
+    std::vector<double> model;
     double C;
     std::vector<std::vector<double> > c_sum_mult1, c_sum_mult2;
     std::vector<double> c_thread_index_tracker;
@@ -31,12 +31,7 @@ class WordEmbeddingsModel : public Model {
 	w2v_length = FLAGS_vec_length;
 
 	// Allocate memory.
-	model = new double[(n_words) * w2v_length];
-	if (!model) {
-	    std::cerr << "WordEmbeddingsModel: Error allocating model" << std::endl;
-	    exit(0);
-	}
-
+	model.resize(n_words * w2v_length);
 	C = 0;
 
 	// Initialize private model.
@@ -49,7 +44,6 @@ class WordEmbeddingsModel : public Model {
     }
 
     ~WordEmbeddingsModel() {
-	delete model;
     }
 
     void SetUpWithPartitions(DatapointPartitions &partitions) override {
@@ -88,44 +82,8 @@ class WordEmbeddingsModel : public Model {
 	return loss / datapoints.size();
     }
 
-    void ComputeGradient(Datapoint * datapoint, Gradient *gradient, int thread_num) override {
-	WordEmbeddingsGradient *w2v_gradient = (WordEmbeddingsGradient *)gradient;
-	const std::vector<double> &labels = datapoint->GetWeights();
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	int coord1 = coordinates[0];
-	int coord2 = coordinates[1];
-	double weight = labels[0];
-	w2v_gradient->gradient_coefficient = 0;
-	w2v_gradient->datapoint = datapoint;
-	double norm = 0;
-	for (int i = 0; i < w2v_length; i++) {
-	    norm += (model[coord1*w2v_length+i] + model[coord2*w2v_length+i]) *
-		(model[coord1*w2v_length+i] + model[coord2*w2v_length+i]);
-	}
-	w2v_gradient->gradient_coefficient = 2 * weight * (log(weight) - norm - C);
-
-	// Update c_sum_mults to calculate C.
-	int index = c_thread_index_tracker[thread_num]++;
-	c_sum_mult1[thread_num][index] = weight * (log(weight) - norm);
-	c_sum_mult2[thread_num][index] = weight;
-    }
-
-    void ApplyGradient(Gradient *gradient) override {
-	WordEmbeddingsGradient *w2v_gradient = (WordEmbeddingsGradient *)gradient;
-	double gradient_coefficient = w2v_gradient->gradient_coefficient;
-	Datapoint *datapoint = w2v_gradient->datapoint;
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	int coord1 = coordinates[0];
-	int coord2 = coordinates[1];
-	for (int i = 0; i < w2v_length; i++) {
-	    double gradient = -1 * (gradient_coefficient * 2 * (model[coord1*w2v_length+i] + model[coord2*w2v_length+i]));
-	    model[coord1*w2v_length+i] -= FLAGS_learning_rate * gradient;
-	    model[coord2*w2v_length+i] -= FLAGS_learning_rate * gradient;
-	}
-    }
-
     void EpochFinish() {
-
+	return;
 	// Update C based on C_sum_mult.
 	double C_A = 0, C_B = 0;
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
@@ -140,8 +98,39 @@ class WordEmbeddingsModel : public Model {
 	std::fill(c_thread_index_tracker.begin(), c_thread_index_tracker.end(), 0);
     }
 
+    int CoordinateSize() override {
+	return w2v_length;
+    }
+
     int NumParameters() override {
 	return n_words;
+    }
+
+    std::vector<double> & ModelData() {
+	return model;
+    }
+
+    bool Mu(Datapoint *datapoint, double &mu_out) {
+	return false;
+    }
+
+    virtual bool Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
+	return false;
+    }
+
+    bool H(Datapoint *datapoint, double &h_out) {
+	const std::vector<double> &labels = datapoint->GetWeights();
+	const std::vector<int> &coordinates = datapoint->GetCoordinates();
+	int coord1 = coordinates[0];
+	int coord2 = coordinates[1];
+	double weight = labels[0];
+	double norm = 0;
+	for (int i = 0; i < w2v_length; i++) {
+	    norm += (model[coord1*w2v_length+i] + model[coord2*w2v_length+i]) *
+		(model[coord1*w2v_length+i] + model[coord2*w2v_length+i]);
+	}
+	h_out = 2 * weight * (log(weight) - norm - C);
+	return true;
     }
 };
 

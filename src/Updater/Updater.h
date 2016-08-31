@@ -2,47 +2,52 @@
 #define _UPDATER_
 
 #include "../DatapointPartitions/DatapointPartitions.h"
-#include "../Gradient/LinearGradient.h"
+#include "../Gradient/Gradient.h"
 
 class Updater {
-private:
+protected:
     Model *model;
-    LinearGradient *thread_gradients;
+    Gradient *thread_gradients;
     std::vector<Datapoint *> datapoints;
     int n_threads;
     std::vector<int> bookkeeping;
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, LinearGradient *g) = 0;
 
-    virtual void ApplyGradient(Model *model, Datapoint *datapoint, LinearGradient *g) {
+    virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
+    virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
+    virtual double Mu(int coordinate) = 0;
+
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
+
+    virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
+	    double mu = Mu(i);
 	    for (int j = 0; j < coordinate_size; j++) {
-		model_data[index * coordinate_size + j] = (1 - g->mu) * model_data[index * coordinate_size + j]
-		    - g->nu[j]
-		    + g->h * model_data[index * coordinate_size + j];
+		model_data[index * coordinate_size + j] = (1 - mu) * model_data[index * coordinate_size + j]
+		    - Nu(i, j)
+		    + H(i, j, g);
 	    }
 	}
     }
 
-    virtual void CatchUp(Model *model, Datapoint *datapoint, LinearGradient *g, int order, std::vector<int> &bookkeeping) {
+    virtual void CatchUp(Model *model, Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
 	// Optimize by quick returning if nu and mu are zero.
-	if (g->nu_zero && g->mu_zero) return;
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = order - bookkeeping[index] - 1;
 	    double geom_sum = 0;
-	    if (g->mu != 0) {
-		geom_sum = ((1 - pow(g->mu, diff+1)) / (1 - g->mu)) - 1;
+	    if (Mu(i) != 0) {
+		geom_sum = ((1 - pow(Mu(i), diff+1)) / (1 - Mu(i))) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
-		    pow(1 - g->mu, diff) * model_data[index * coordinate_size + j]
-		    - g->nu[j] * geom_sum;
+		    pow(1 - Mu(i), diff) * model_data[index * coordinate_size + j]
+		    - Nu(i, j) * geom_sum;
 	    }
 	}
     }
@@ -50,10 +55,10 @@ private:
 public:
     Updater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) {
 	// Create gradients for each thread.
-	thread_gradients = new LinearGradient[n_threads];
+	thread_gradients = new Gradient[n_threads];
 	this->n_threads = n_threads;
 	for (int thread = 0; thread < n_threads; thread++) {
-	    thread_gradients[thread] = LinearGradient();
+	    thread_gradients[thread] = Gradient();
 	    thread_gradients[thread].SetUp(model);
 	}
 	this->model = model;
@@ -89,10 +94,7 @@ public:
     virtual void EpochFinish() {
 	model->EpochFinish();
 	for (const auto &datapoint : datapoints) {
-	    LinearGradient g;
-	    g.SetUp(model);
-	    g.nu_zero = model->Nu(datapoint, g.nu);
-	    g.mu_zero = model->Mu(datapoint, g.mu);
+	    Gradient g;
 	    CatchUp(model, datapoint, &g, model->NumParameters()+1, bookkeeping);
 	    for (const auto &coordinate : datapoint->GetCoordinates()) {
 		bookkeeping[coordinate] = model->NumParameters()+1;

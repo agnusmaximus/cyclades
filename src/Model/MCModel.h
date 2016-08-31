@@ -83,27 +83,31 @@ class MCModel : public Model {
 	return rlength;
     }
 
-    bool Mu(Datapoint *datapoint, double &mu_out) {
-	return true;
-    }
-
-    bool Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
-	// nu_out = 0, which is assumed. So do nothing.
-	return true;
-    }
-
-    bool H(Datapoint *datapoint, double &h_out) {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) {
+	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	int user_coordinate = coordinates[0];
 	int movie_coordinate = coordinates[1];
 	double label = labels[0];
-	h_out = 0;
+	double coeff = 0;
 	for (int i = 0; i < rlength; i++) {
-	    h_out += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
+	    coeff += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
 	}
-	h_out -= label;
-	return false;
+	coeff -= label;
+	g->coeffs[0] = coeff;
+    }
+
+    double Mu(int coordinate) {
+	return 0;
+    }
+
+    double Nu(int coordinate, int index_into_coordinate_vector) {
+	return 0;
+    }
+
+    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+	return g->coeffs[0] * model[coordinate * rlength + index_into_coordinate_vector];
     }
 };
 

@@ -113,10 +113,7 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 #include "Datapoint/MCDatapoint.h"
 #include "Model/MCModel.h"
 
-/*#include "Datapoint/DenseLSDatapoint.h"
-#include "Model/DenseLSModel.h"
-
-#include "Datapoint/WordEmbeddingsDatapoint.h"
+/*#include "Datapoint/WordEmbeddingsDatapoint.h"
 #include "Model/WordEmbeddingsModel.h"
 
 #include "Datapoint/MatrixInverseDatapoint.h"
