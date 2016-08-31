@@ -52,6 +52,7 @@ class WordEmbeddingsModel : public Model {
 	c_sum_mult2.resize(FLAGS_n_threads);
 	c_thread_index_tracker.resize(FLAGS_n_threads);
 	// First calculate number of datapoints per thread.
+	int max_datapoints = 0;
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
 	    int n_datapoints_for_thread = 0;
 	    for (int batch = 0; batch < partitions.NumBatches(); batch++) {
@@ -105,11 +106,11 @@ class WordEmbeddingsModel : public Model {
 	return n_words;
     }
 
-    std::vector<double> & ModelData() {
+    std::vector<double> & ModelData() override {
 	return model;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, int thread) {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
@@ -124,26 +125,26 @@ class WordEmbeddingsModel : public Model {
 	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
 
 	// Do some extra computation for C.
-	int index = c_thread_index_tracker[thread]++;
-	c_sum_mult1[thread][index] = weight * (log(weight) - norm);
-	c_sum_mult2[thread][index] = weight;
+	int index = c_thread_index_tracker[omp_get_thread_num()]++;
+	c_sum_mult1[omp_get_thread_num()][index] = weight * (log(weight) - norm);
+	c_sum_mult2[omp_get_thread_num()][index] = weight;
     }
 
-    virtual double Mu(int coordinate) {
+    virtual double Mu(int coordinate, double value) override {
 	return 0;
     }
 
-    virtual double Nu(int coordinate, int index_into_coordinate_vector) {
+    virtual double Nu(int coordinate, double value, int index_into_coordinate_vector) override {
 	return 0;
     }
 
-    virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    virtual double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) override {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
 	return -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+index_into_coordinate_vector] + model[c2*w2v_length+index_into_coordinate_vector]));
     }
 
-    virtual bool NeedsCatchup() {
+    virtual bool NeedsCatchup() override {
 	return false;
     }
 };

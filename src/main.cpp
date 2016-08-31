@@ -100,13 +100,13 @@ int main(int argc, char **argv) {
     }
     else if (FLAGS_word_embeddings) {
 	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint>();
-    }/*
+    }
     else if (FLAGS_matrix_inverse) {
 	Run<MatrixInverseModel, MatrixInverseDatapoint>();
     }
-    else if (FLAGS_least_squares) {
+    /*else if (FLAGS_least_squares) {
 	Run<LSModel, LSDatapoint>();
-    }
+	}
     else if (FLAGS_ising_gibbs) {
 	Run<IsingGibbsModel, GibbsDatapoint>();
 	}*/

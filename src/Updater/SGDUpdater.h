@@ -6,16 +6,18 @@
 
 class SGDUpdater : public Updater {
 protected:
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, int thread) {
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, bool preprocess=true) {
 	g->datapoint = datapoint;
-	model->PrecomputeCoefficients(datapoint, g, thread);
+	if (preprocess)
+	    model->PrecomputeCoefficients(datapoint, g);
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    g->mu[index] = model->Mu(index);
+	    double value = datapoint->GetWeights()[i];
+	    g->mu[index] = model->Mu(index, value);
 	    for (int j = 0; j < coord_size; j++) {
-		g->nu[index*coord_size+j] = model->Nu(index, j);
-		g->h[index*coord_size+j] = model->H(index, j, g);
+		g->nu[index*coord_size+j] = model->Nu(index, value, j);
+		g->h[index*coord_size+j] = model->H(index, value, j, g);
 	    }
 	}
     }

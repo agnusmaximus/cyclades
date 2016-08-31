@@ -17,7 +17,7 @@ protected:
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Mu(int coordinate, Gradient *g) = 0;
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, int thread) = 0;
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, bool preprocess=true) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &model_data = model->ModelData();
@@ -42,12 +42,13 @@ protected:
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = order - bookkeeping[index] - 1;
 	    double geom_sum = 0;
-	    if (Mu(i, g) != 0) {
-		geom_sum = ((1 - pow(Mu(i, g), diff+1)) / (1 - Mu(i, g))) - 1;
+	    double mu = Mu(i, g);
+	    if (mu != 0) {
+		geom_sum = ((1 - pow(mu, diff+1)) / (1 - mu)) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
-		    pow(1 - Mu(i, g), diff) * model_data[index * coordinate_size + j]
+		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
 		    - Nu(i, j, g) * geom_sum;
 	    }
 	}
@@ -78,7 +79,7 @@ public:
     // Main update method.
     virtual void Update(Model *model, Datapoint *datapoint, int thread_num) {
 	thread_gradients[thread_num].Clear();
-	ComputeGradient(model, datapoint, &thread_gradients[thread_num], thread_num);
+	ComputeGradient(model, datapoint, &thread_gradients[thread_num]);
         CatchUp(model, datapoint, &thread_gradients[thread_num], datapoint->GetOrder(), bookkeeping);
 	ApplyGradient(model, datapoint, &thread_gradients[thread_num]);
 	for (const auto &coordinate : datapoint->GetCoordinates()) {
@@ -93,15 +94,16 @@ public:
 
     // Called when the epoch ends.
     virtual void EpochFinish() {
-	model->EpochFinish();
 	for (const auto &datapoint : datapoints) {
-	    Gradient g;
-	    CatchUp(model, datapoint, &g, model->NumParameters()+1, bookkeeping);
+	    ComputeGradient(model, datapoint, &thread_gradients[0], false);
+	    CatchUp(model, datapoint, &thread_gradients[0], model->NumParameters()+1, bookkeeping);
 	    for (const auto &coordinate : datapoint->GetCoordinates()) {
 		bookkeeping[coordinate] = model->NumParameters()+1;
 	    }
 	}
+
 	std::fill(bookkeeping.begin(), bookkeeping.end(), 0);
+	model->EpochFinish();
     }
 };
 

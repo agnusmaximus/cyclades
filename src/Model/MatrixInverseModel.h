@@ -10,12 +10,8 @@ class MatrixInverseModel : public Model {
 private:
     int n_coords;
     double lambda;
-    double *model, *model_tilde, *sum_gradient_tilde;
-    double *sum_gradient_local;
-    std::vector<int> n_zeroes_in_column;
+    std::vector<double> model;
     std::vector<double> B;
-    std::vector<double> sum_powers;
-    std::vector<Datapoint *> datapoints;
 
     void Initialize(const std::string &input_line) {
 
@@ -23,10 +19,7 @@ private:
 	// number of coordinates (# of rows/columns in square matrix).
 	std::stringstream input(input_line);
 	input >> n_coords;
-	model = (double *)malloc(sizeof(double) * n_coords);
-	model_tilde = (double *)malloc(sizeof(double) * n_coords);
-	sum_gradient_tilde = (double *)malloc(sizeof(double) * n_coords);
-	sum_gradient_local = (double *)malloc(sizeof(double) * n_coords * FLAGS_n_threads);
+	model.resize(n_coords);
 
 	// Set elements in model to be a random number in range.
 	for (int i = 0; i < n_coords; i++) {
@@ -98,15 +91,9 @@ public:
     }
 
     ~MatrixInverseModel() {
-	delete model;
-	delete model_tilde;
-	delete sum_gradient_tilde;
-	delete sum_gradient_local;
     }
 
     void SetUp(const std::vector<Datapoint *> &datapoints) override {
-	this->datapoints = datapoints;
-
 	// Normalize the rows formed by the datapoint.
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    double sum_sqr = 0;
@@ -155,25 +142,6 @@ public:
 
 	// Free memory of transpose sparse matrix.
 	for_each(transpose.begin(), transpose.end(), std::default_delete<Datapoint>());
-
-	// Precompute sum of powers for "catching up" as this is a dense problem.
-	double sum = 0;
-	sum_powers.push_back(0);
-	for (int i = 0; i < n_coords; i++) {
-	    sum += pow(1 - lambda / (double)n_coords * (double)FLAGS_learning_rate, i);
-	    sum_powers.push_back(sum);
-	}
-
-	// Calculate the number of zeroes in every column of the matrix.
-	// This is useful for calculating sums of gradients for SVRG.
-	for (int i = 0; i < n_coords; i++) {
-	    n_zeroes_in_column.push_back(n_coords);
-	}
-	for (const auto &datapoint : datapoints) {
-	    for (const auto &index : datapoint->GetCoordinates()) {
-		n_zeroes_in_column[index]--;
-	    }
-	}
     }
 
     double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
@@ -199,93 +167,43 @@ public:
 	return loss + 2;
     }
 
-    void ComputeGradient(Datapoint *datapoint, Gradient *gradient, int thread_num) override {
-	MatrixInverseGradient *g = (MatrixInverseGradient *)gradient;
-	const std::vector<double> &weights = datapoint->GetWeights();
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	g->gradient_coefficient = 0;
-	g->gradient_coefficient_tilde = 0;
-	g->datapoint = datapoint;
-	for (int i = 0; i < coordinates.size(); i++) {
-	    g->gradient_coefficient += model[coordinates[i]] * weights[i];
-	    g->gradient_coefficient_tilde += model_tilde[coordinates[i]] * weights[i];
-	}
-    }
-
-    void ApplyGradient(Gradient *gradient) override {
-	MatrixInverseGradient *g = (MatrixInverseGradient *)gradient;
-	Datapoint *datapoint = g->datapoint;
-	const std::vector<double> &weights = datapoint->GetWeights();
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	for (int i = 0; i < coordinates.size(); i++) {
-	    double sgd_gradient = 1 / (double)n_coords * lambda * model[coordinates[i]] -
-		g->gradient_coefficient * weights[i] -
-		B[coordinates[i]] / n_coords;
-	    double svrg_gradient = 1 / (double)n_coords * lambda * model_tilde[coordinates[i]] -
-		g->gradient_coefficient_tilde * weights[i] -
-		B[coordinates[i]] / n_coords;
-	    model[coordinates[i]] -= FLAGS_learning_rate * (sgd_gradient - svrg_gradient + sum_gradient_tilde[coordinates[i]] / n_coords);
-	}
-    }
-
-    void CatchUp(Datapoint *datapoint, int order, std::vector<int> &bookkeeping) override {
-	for (const auto &index : datapoint->GetCoordinates()) {
-	    int diff = order - bookkeeping[index] - 1;
-	    double spower = 0;
-	    if (diff < 0) diff = 0;
-	    spower = sum_powers[diff];
-	    double regular_catchup = model[index] * pow(1 - lambda / (double)n_coords * FLAGS_learning_rate, diff) +
-		spower * FLAGS_learning_rate * B[index] / n_coords;
-	    double svrg_catchup = FLAGS_learning_rate * (lambda / (double)n_coords * model_tilde[index] - sum_gradient_tilde[index] / n_coords) * spower;
-	    model[index] = regular_catchup + svrg_catchup;
-	}
-    }
-
-    void EpochBegin() override {
-	// 1. Copy over model to model_tilde to be used in SVRG
-	memcpy(model_tilde, model, sizeof(double) * n_coords);
-
-	// 2. Compute sum of gradients of the model tilde to be used in SVRG.
-	for (int i = 0; i < n_coords; i++) {
-	    // Initially, add the zeroes contribution gradient sum.
-	    sum_gradient_tilde[i] = (1 / (double)n_coords * lambda * model_tilde[i] - B[i] / n_coords) * n_zeroes_in_column[i];
-	}
-
-	// To sum in parallel we need extra space per thread to avoid conflicts.
-	memset(sum_gradient_local, 0, sizeof(double) * n_coords * FLAGS_n_threads);
-
-	// In parallel, sum up gradients for nnz entries.
-#pragma omp parallel for num_threads(FLAGS_n_threads)
-	for (int dp = 0; dp < datapoints.size(); dp++) {
-	    Datapoint *datapoint = datapoints[dp];
-	    int thread_id = omp_get_thread_num();
-	    double ai_t_x = 0;
-	    for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
-		int index = datapoint->GetCoordinates()[i];
-		double weight = datapoint->GetWeights()[i];
-		ai_t_x += model_tilde[index] * weight;
-	    }
-	    for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
-		int index = datapoint->GetCoordinates()[i];
-		double weight = datapoint->GetWeights()[i];
-		sum_gradient_local[index*FLAGS_n_threads+thread_id] += (1 / (double)n_coords * lambda * model_tilde[index] - weight * ai_t_x) - B[index] / n_coords;
-	    }
-	    }
-
-	// Accumulate sums.
-#pragma omp parallel for num_threads(FLAGS_n_threads)
-	for (int i = 0; i < n_coords; i++) {
-	    for (int j = 0; j < FLAGS_n_threads; j++) {
-		sum_gradient_tilde[i] += sum_gradient_local[i*FLAGS_n_threads+j];
-	    }
-	}
-    }
-
-    void EpochFinish() override {
-    }
-
     int NumParameters() override {
 	return n_coords;
+    }
+
+    int CoordinateSize() override {
+	return 1;
+    }
+
+    std::vector<double> & ModelData() override {
+	return model;
+    }
+
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
+	if (g->coeffs.size() != 1) g->coeffs.resize(1);
+	const std::vector<double> &weights = datapoint->GetWeights();
+	const std::vector<int> &coordinates = datapoint->GetCoordinates();
+	double product = 0;
+	for (int i = 0; i < coordinates.size(); i++) {
+	    product += model[coordinates[i]] * weights[i];
+	}
+	g->coeffs[0] = product;
+    }
+
+    double Mu(int coordinate, double value) override {
+	return (lambda / n_coords);
+    }
+
+    double Nu(int coordinate, double value, int index_into_coordinate_vector) override {
+	return B[coordinate] / n_coords;
+    }
+
+    double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) override {
+	return g->coeffs[0] * value;
+    }
+
+    bool NeedsCatchup() override {
+	return true;
     }
 };
 
