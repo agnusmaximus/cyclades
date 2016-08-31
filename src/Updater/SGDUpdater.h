@@ -7,10 +7,6 @@
 class SGDUpdater : public Updater {
 protected:
 
-    void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
-	model->PrecomputeCoefficients(datapoint, g);
-    }
-
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
 	return -FLAGS_learning_rate * model->H(coordinate, index_into_coordinate_vector, g);
     }

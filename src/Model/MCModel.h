@@ -111,7 +111,12 @@ class MCModel : public Model {
     }
 
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) override {
-	return g->coeffs[0] * model[coordinate * rlength + index_into_coordinate_vector];
+	double other_coordinate = 0;
+	if (g->datapoint->GetCoordinates()[0] == coordinate)
+	    other_coordinate = g->datapoint->GetCoordinates()[1];
+	else
+	    other_coordinate = g->datapoint->GetCoordinates()[0];
+	return g->coeffs[0] * model[other_coordinate * rlength + index_into_coordinate_vector];
     }
 };
 

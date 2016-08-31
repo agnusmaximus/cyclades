@@ -110,15 +110,8 @@ class WordEmbeddingsModel : public Model {
 	return model;
     }
 
-    bool Mu(Datapoint *datapoint, double &mu_out) {
-	return false;
-    }
-
-    virtual bool Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
-	return false;
-    }
-
-    bool H(Datapoint *datapoint, double &h_out) {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) {
+	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	int coord1 = coordinates[0];
@@ -129,8 +122,23 @@ class WordEmbeddingsModel : public Model {
 	    norm += (model[coord1*w2v_length+i] + model[coord2*w2v_length+i]) *
 		(model[coord1*w2v_length+i] + model[coord2*w2v_length+i]);
 	}
-	h_out = 2 * weight * (log(weight) - norm - C);
-	return true;
+	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
+    }
+
+    virtual double Mu(int coordinate) {
+	return 0;
+    }
+
+    virtual double Nu(int coordinate, int index_into_coordinate_vector) {
+	return 0;
+    }
+
+    virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+	return 0;
+    }
+
+    virtual bool NeedsCatchup() {
+	return false;
     }
 };
 
