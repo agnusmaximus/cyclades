@@ -98,10 +98,7 @@ int main(int argc, char **argv) {
     if (FLAGS_matrix_completion) {
 	Run<MCModel, MCDatapoint>();
     }
-/*else if (FLAGS_dense_least_squares) {
-	Run<DenseLSModel, DenseLSDatapoint>();
-    }
-    else if (FLAGS_word_embeddings) {
+    /*else if (FLAGS_word_embeddings) {
 	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint>();
     }
     else if (FLAGS_matrix_inverse) {
