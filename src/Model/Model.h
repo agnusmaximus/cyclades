@@ -36,9 +36,10 @@ class Model {
     // The following are for updates of the form:
     // x_j = (1 - mu_j)x_j - nu_j + h_ij*x_S_i
     // Where h_ij = 0 for j not in S_i.
-    virtual void Mu(Datapoint *datapoint, double &mu_out) = 0;
-    virtual void Nu(Datapoint *datapoint, std::vector<double> &nu_out) = 0;
-    virtual void H(Datapoint *datapoint, double &h_out) = 0;
+    // Return false if value is nnz, true otherwise.
+    virtual bool Mu(Datapoint *datapoint, double &mu_out) = 0;
+    virtual bool Nu(Datapoint *datapoint, std::vector<double> &nu_out) = 0;
+    virtual bool H(Datapoint *datapoint, double &h_out) = 0;
 };
 
 #endif

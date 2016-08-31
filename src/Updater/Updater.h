@@ -16,18 +16,22 @@ private:
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, LinearGradient *g) {
 	std::vector<double> &model_data = model->ModelData();
+	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    for (int j = 0; j < model->CoordinateSize(); j++) {
-		model_data[index * model->CoordinateSize() + j] = (1 - g->mu) * model_data[index * model->CoordinateSize() + j]
+	    for (int j = 0; j < coordinate_size; j++) {
+		model_data[index * coordinate_size + j] = (1 - g->mu) * model_data[index * coordinate_size + j]
 		    - g->nu[j]
-		    + g->h * model_data[index * model->CoordinateSize() + j];
+		    + g->h * model_data[index * coordinate_size + j];
 	    }
 	}
     }
 
     virtual void CatchUp(Model *model, Datapoint *datapoint, LinearGradient *g, int order, std::vector<int> &bookkeeping) {
+	// Optimize by quick returning if nu and mu are zero.
+	if (g->nu_zero && g->mu_zero) return;
 	std::vector<double> &model_data = model->ModelData();
+	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = order - bookkeeping[index] - 1;
@@ -35,9 +39,9 @@ private:
 	    if (g->mu != 0) {
 		geom_sum = ((1 - pow(g->mu, diff+1)) / (1 - g->mu)) - 1;
 	    }
-	    for (int j = 0; j < model->CoordinateSize(); j++) {
-		model_data[index * model->CoordinateSize() + j] =
-		    pow(1 - g->mu, diff) * model_data[index * model->CoordinateSize() + j]
+	    for (int j = 0; j < coordinate_size; j++) {
+		model_data[index * coordinate_size + j] =
+		    pow(1 - g->mu, diff) * model_data[index * coordinate_size + j]
 		    - g->nu[j] * geom_sum;
 	    }
 	}
@@ -87,8 +91,8 @@ public:
 	for (const auto &datapoint : datapoints) {
 	    LinearGradient g;
 	    g.SetUp(model);
-	    model->Nu(datapoint, g.nu);
-	    model->Mu(datapoint, g.mu);
+	    g.nu_zero = model->Nu(datapoint, g.nu);
+	    g.mu_zero = model->Mu(datapoint, g.mu);
 	    CatchUp(model, datapoint, &g, model->NumParameters()+1, bookkeeping);
 	    for (const auto &coordinate : datapoint->GetCoordinates()) {
 		bookkeeping[coordinate] = model->NumParameters()+1;

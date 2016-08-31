@@ -8,11 +8,13 @@ class SGDUpdater : public Updater {
 private:
 
     void ComputeGradient(Model *model, Datapoint *datapoint, LinearGradient *g) {
-	model->Nu(datapoint, g->nu);
-	model->Mu(datapoint, g->mu);
-	model->H(datapoint, g->h);
-	for (int i = 0; i < g->nu.size(); i++) {
-	    g->nu[i] *= FLAGS_learning_rate;
+	g->nu_zero = model->Nu(datapoint, g->nu);
+	g->mu_zero = model->Mu(datapoint, g->mu);
+	g->h_zero = model->H(datapoint, g->h);
+	if (!g->nu_zero) {
+	    for (int i = 0; i < g->nu.size(); i++) {
+		g->nu[i] *= FLAGS_learning_rate;
+	    }
 	}
 	g->mu *= FLAGS_learning_rate;
 	g->h *= -FLAGS_learning_rate;

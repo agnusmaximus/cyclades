@@ -83,15 +83,16 @@ class MCModel : public Model {
 	return rlength;
     }
 
-    void Mu(Datapoint *datapoint, double &mu_out) {
-	mu_out = 0;
+    bool Mu(Datapoint *datapoint, double &mu_out) {
+	return true;
     }
 
-    void Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
+    bool Nu(Datapoint *datapoint, std::vector<double> &nu_out) {
 	// nu_out = 0, which is assumed. So do nothing.
+	return true;
     }
 
-    void H(Datapoint *datapoint, double &h_out) {
+    bool H(Datapoint *datapoint, double &h_out) {
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	int user_coordinate = coordinates[0];
@@ -102,6 +103,7 @@ class MCModel : public Model {
 	    h_out += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
 	}
 	h_out -= label;
+	return false;
     }
 };
 
