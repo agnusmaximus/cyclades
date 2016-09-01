@@ -59,19 +59,23 @@ protected:
 	if (!model->NeedsCatchup()) return;
 	int coordinate_size = model->CoordinateSize();
 	std::vector<double> &model_data = model->ModelData();
-	std::vector<double> nu(coordinate_size);
-	for (int i = 0; i < model->NumParameters(); i++) {
-	    int diff = model->NumParameters() - bookkeeping[i];
-	    double geom_sum = 0, mu = 0;
-	    model->Mu(i, mu);
-	    if (mu != 0) {
-		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
-	    }
-	    model->Nu(i, nu);
-	    for (int j = 0; j < coordinate_size; j++) {
-		model_data[i * coordinate_size + j] =
-		    pow(1 - mu, diff) * model_data[i * coordinate_size + j]
-		    - nu[j] * geom_sum;
+#pragma omp parallel num_threads(FLAGS_n_threads)
+	{
+	    std::vector<double> nu(coordinate_size);
+#pragma omp for
+	    for (int i = 0; i < model->NumParameters(); i++) {
+		int diff = model->NumParameters() - bookkeeping[i];
+		double geom_sum = 0, mu = 0;
+		model->Mu(i, mu);
+		if (mu != 0) {
+		    geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
+		}
+		model->Nu(i, nu);
+		for (int j = 0; j < coordinate_size; j++) {
+		    model_data[i * coordinate_size + j] =
+			pow(1 - mu, diff) * model_data[i * coordinate_size + j]
+			- nu[j] * geom_sum;
+		}
 	    }
 	}
     }
@@ -118,18 +122,7 @@ public:
 
     // Called when the epoch ends.
     virtual void EpochFinish() {
-	if (model->NeedsCatchup()) {
-	    for (int i = 0; i < datapoints.size(); i++) {
-		Datapoint *datapoint = datapoints[i];
-		ComputeGradient(model, datapoint, &thread_gradients[0], false);
-		//CatchUp(model, datapoint, &thread_gradients[0], model->NumParameters()+1, bookkeeping);
-		//for (const auto &coordinate : datapoint->GetCoordinates()) {
-		//bookkeeping[coordinate] = model->NumParameters()+1;
-		//}
-	    }
-	}
 	FinalCatchUp(model, bookkeeping);
-
 	std::fill(bookkeeping.begin(), bookkeeping.end(), 0);
 	model->EpochFinish();
     }
