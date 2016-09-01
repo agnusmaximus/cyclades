@@ -39,7 +39,6 @@ class LSModel : public Model {
 	input >> n_coords;
 
 	// Initialize model.
-	//model = (double *)malloc(sizeof(double) * n_coords);
 	model.resize(n_coords);
 	std::fill(model.begin(), model.end(), 0);
     }
@@ -121,10 +120,6 @@ class LSModel : public Model {
 
     void H(int coordinate, std::vector<double> &out, Gradient *g) override {
 	out[0] = g->coeffs[coordinate];
-    }
-
-    bool NeedsCatchup() override {
-	return false;
     }
 
     ~LSModel() {

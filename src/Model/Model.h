@@ -41,7 +41,6 @@ class Model {
     virtual void Mu(int coordinate, double &out) = 0;
     virtual void Nu(int coordinate, std::vector<double> &out) = 0;
     virtual void H(int coordinate, std::vector<double> &out, Gradient *g) = 0;
-    virtual bool NeedsCatchup() { return true; }
 };
 
 #endif

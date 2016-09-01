@@ -203,10 +203,6 @@ public:
     void H(int coordinate, std::vector<double> &out, Gradient *g) override {
 	out[0] = g->coeffs[coordinate];
     }
-
-    bool NeedsCatchup() override {
-	return true;
-    }
 };
 
 #endif

@@ -98,10 +98,6 @@ class MCModel : public Model {
 	g->coeffs[0] = coeff;
     }
 
-    bool NeedsCatchup() override {
-	return false;
-    }
-
     void Mu(int coordinate, double &out) override {
 	out = 0;
     }

@@ -34,7 +34,6 @@ protected:
     }
 
     void CatchUp(Model *model, Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
-	if (!model->NeedsCatchup()) return;
 	// Optimize by quick returning if nu and mu are zero.
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
@@ -56,7 +55,6 @@ protected:
     }
 
     void FinalCatchUp(Model *model, std::vector<int> &bookkeeping) {
-	if (!model->NeedsCatchup()) return;
 	int coordinate_size = model->CoordinateSize();
 	std::vector<double> &model_data = model->ModelData();
 #pragma omp parallel num_threads(FLAGS_n_threads)
@@ -108,10 +106,8 @@ public:
 	ComputeGradient(model, datapoint, &thread_gradients[thread_num]);
         CatchUp(model, datapoint, &thread_gradients[thread_num], datapoint->GetOrder(), bookkeeping);
 	ApplyGradient(model, datapoint, &thread_gradients[thread_num]);
-	if (model->NeedsCatchup()) {
-	    for (const auto &coordinate : datapoint->GetCoordinates()) {
-		bookkeeping[coordinate] = datapoint->GetOrder();
-	    }
+	for (const auto &coordinate : datapoint->GetCoordinates()) {
+	    bookkeeping[coordinate] = datapoint->GetOrder();
 	}
     }
 

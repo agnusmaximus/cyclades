@@ -145,10 +145,6 @@ class WordEmbeddingsModel : public Model {
 	    out[i] = -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+i] + model[c2*w2v_length+i]));
 	}
     }
-
-    virtual bool NeedsCatchup() override {
-	return false;
-    }
 };
 
 
