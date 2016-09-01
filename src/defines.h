@@ -119,10 +119,10 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 #include "Datapoint/MatrixInverseDatapoint.h"
 #include "Model/MatrixInverseModel.h"
 
-/*#include "Datapoint/LSDatapoint.h"
+#include "Datapoint/LSDatapoint.h"
 #include "Model/LSModel.h"
 
-#include "Datapoint/GibbsDatapoint.h"
+/*#include "Datapoint/GibbsDatapoint.h"
 #include "Model/IsingGibbsModel.h"*/
 
 #endif

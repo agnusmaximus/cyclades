@@ -8,6 +8,7 @@ class SGDUpdater : public Updater {
 protected:
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	g->datapoint = datapoint;
+	model->PrecomputeCoefficients(datapoint, g);
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];

@@ -7,10 +7,7 @@
 class LSModel : public Model {
  private:
     int n_coords;
-    double *model;
-    double *sum_gradients;
-    std::vector<std::map<int, double> > prev_gradients;
-    // Artificial label vector.
+    std::vector<double> model;
     std::vector<double> B;
 
     void MatrixVectorMultiply(const std::vector<Datapoint *> &datapoints,
@@ -42,15 +39,9 @@ class LSModel : public Model {
 	input >> n_coords;
 
 	// Initialize model.
-	model = (double *)malloc(sizeof(double) * n_coords);
-	memset(model, 0, sizeof(double) * n_coords);
-
-	// Initialize sum of gradients.
-	sum_gradients = (double *)malloc(sizeof(double) * n_coords);
-	memset(sum_gradients, 0, sizeof(double) * n_coords);
-
-	// Resize previous gradients.
-	prev_gradients.resize(n_coords);
+	//model = (double *)malloc(sizeof(double) * n_coords);
+	model.resize(n_coords);
+	std::fill(model.begin(), model.end(), 0);
     }
  public:
     LSModel(const std::string &input_line) {
@@ -91,10 +82,20 @@ class LSModel : public Model {
 	return loss / datapoints.size();
     }
 
-    void ComputeGradient(Datapoint *datapoint, Gradient *gradient, int thread_num) override {
-	LSGradient *lsgrad = (LSGradient *)gradient;
-	lsgrad->datapoint = datapoint;
-	lsgrad->gradient_coefficient = 0;
+    int NumParameters() override {
+	return n_coords;
+    }
+
+    int CoordinateSize() override {
+	return 1;
+    }
+
+    std::vector<double> & ModelData() override {
+	return model;
+    }
+
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
+	if (g->coeffs.size() != n_coords) g->coeffs.resize(n_coords);
 	int row = ((LSDatapoint *)datapoint)->row;
 	double cp = 0;
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
@@ -102,40 +103,31 @@ class LSModel : public Model {
 	    double weight = datapoint->GetWeights()[i];
 	    cp += weight * model[index];
 	}
-	lsgrad->gradient_coefficient = 2 * (cp - B[row]);
-    }
-
-    void ApplyGradient(Gradient *gradient) override {
-	LSGradient *lsgrad = (LSGradient *)gradient;
-	Datapoint *datapoint = lsgrad->datapoint;
-	double gradient_coefficient = lsgrad->gradient_coefficient;
-	int row = ((LSDatapoint *)datapoint)->row;
+	double partial_grad = 2 * (cp - B[row]);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    double weight = datapoint->GetWeights()[i];
-	    double prev_gradient = prev_gradients[row][index];
-	    double sum_gradient = sum_gradients[index];
-	    double complete_gradient = (gradient_coefficient*weight) - prev_gradient + sum_gradient / n_coords;
-	    model[index] -= FLAGS_learning_rate * complete_gradient;
-	    sum_gradients[index] += (gradient_coefficient*weight) - prev_gradient;
-	    prev_gradients[row][index] = gradient_coefficient*weight;
+	    g->coeffs[index] = partial_grad * weight;
 	}
     }
 
-    void CatchUp(Datapoint *datapoint, int order, std::vector<int> &bookkeeping) override {
-	for (const auto &index : datapoint->GetCoordinates()) {
-	    int diff = order - bookkeeping[index] - 1;
-	    if (diff < 0) diff = 0;
-	    model[index] -= FLAGS_learning_rate * diff * sum_gradients[index] / n_coords;
-	}
+    void Mu(int coordinate, double &out) override {
+	out = 0;
     }
 
-    int NumParameters() override {
-	return n_coords;
+    void Nu(int coordinate, std::vector<double> &out) override {
+	out[0] = 0;
+    }
+
+    void H(int coordinate, std::vector<double> &out, Gradient *g) override {
+	out[0] = g->coeffs[coordinate];
+    }
+
+    bool NeedsCatchup() override {
+	return false;
     }
 
     ~LSModel() {
-	delete model;
     }
 };
 
