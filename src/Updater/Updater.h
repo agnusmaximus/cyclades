@@ -83,8 +83,10 @@ public:
 	ComputeGradient(model, datapoint, &thread_gradients[thread_num]);
         CatchUp(model, datapoint, &thread_gradients[thread_num], datapoint->GetOrder(), bookkeeping);
 	ApplyGradient(model, datapoint, &thread_gradients[thread_num]);
-	for (const auto &coordinate : datapoint->GetCoordinates()) {
-	    bookkeeping[coordinate] = datapoint->GetOrder();
+	if (model->NeedsCatchup()) {
+	    for (const auto &coordinate : datapoint->GetCoordinates()) {
+		bookkeeping[coordinate] = datapoint->GetOrder();
+	    }
 	}
     }
 
@@ -95,11 +97,13 @@ public:
 
     // Called when the epoch ends.
     virtual void EpochFinish() {
-	for (const auto &datapoint : datapoints) {
-	    ComputeGradient(model, datapoint, &thread_gradients[0], false);
-	    CatchUp(model, datapoint, &thread_gradients[0], model->NumParameters()+1, bookkeeping);
-	    for (const auto &coordinate : datapoint->GetCoordinates()) {
-		bookkeeping[coordinate] = model->NumParameters()+1;
+	if (model->NeedsCatchup()) {
+	    for (const auto &datapoint : datapoints) {
+		ComputeGradient(model, datapoint, &thread_gradients[0], false);
+		CatchUp(model, datapoint, &thread_gradients[0], model->NumParameters()+1, bookkeeping);
+		for (const auto &coordinate : datapoint->GetCoordinates()) {
+		    bookkeeping[coordinate] = model->NumParameters()+1;
+		}
 	    }
 	}
 
