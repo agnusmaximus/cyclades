@@ -17,7 +17,7 @@ protected:
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Mu(int coordinate, Gradient *g) = 0;
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g, bool preprocess=true) = 0;
+    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &model_data = model->ModelData();
