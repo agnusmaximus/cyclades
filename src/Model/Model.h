@@ -38,9 +38,9 @@ class Model {
     // Where h_ij = 0 for j not in S_i.
     // Return false if value is nnz, true otherwise.
     virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) = 0;
-    virtual double Mu(int coordinate, double value) = 0;
-    virtual double Nu(int coordinate, double value, int index_into_coordinate_vector) = 0;
-    virtual double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) = 0;
+    virtual void Mu(int coordinate, double &out) = 0;
+    virtual void Nu(int coordinate, std::vector<double> &out) = 0;
+    virtual void H(int coordinate, std::vector<double> &out, Gradient *g) = 0;
     virtual bool NeedsCatchup() { return true; }
 };
 

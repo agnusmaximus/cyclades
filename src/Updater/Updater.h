@@ -33,7 +33,7 @@ protected:
 	}
     }
 
-    virtual void CatchUp(Model *model, Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
+    void CatchUp(Model *model, Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
 	if (!model->NeedsCatchup()) return;
 	// Optimize by quick returning if nu and mu are zero.
 	std::vector<double> &model_data = model->ModelData();
@@ -54,6 +54,23 @@ protected:
 	    }
 	}
     }
+
+    /*void FinalCatchUp(Model *model, std::vector<int> &bookkeeping) {
+	if (!model->NeedsCatchup()) return;
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    int diff = model->NumParameters() - bookkeeping[i] - 1;
+	    double geom_sum = 0;
+	    double mu = model->Mu(index, g);
+	    if (mu != 0) {
+		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
+	    }
+	    for (int j = 0; j < coordinate_size; j++) {
+		model_data[index * coordinate_size + j] =
+		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
+		    - Nu(index, j, g) * geom_sum;
+	    }
+	}
+	}*/
 
 public:
     Updater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) {
@@ -98,7 +115,9 @@ public:
     // Called when the epoch ends.
     virtual void EpochFinish() {
 	if (model->NeedsCatchup()) {
-	    for (const auto &datapoint : datapoints) {
+#pragma omp parallel for num_threads(FLAGS_n_threads)
+	    for (int i = 0; i < datapoints.size(); i++) {
+		Datapoint *datapoint = datapoints[i];
 		ComputeGradient(model, datapoint, &thread_gradients[0], false);
 		CatchUp(model, datapoint, &thread_gradients[0], model->NumParameters()+1, bookkeeping);
 		for (const auto &coordinate : datapoint->GetCoordinates()) {

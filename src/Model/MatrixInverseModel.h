@@ -179,26 +179,29 @@ public:
     }
 
     void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
-	if (g->coeffs.size() != 1) g->coeffs.resize(1);
+	if (g->coeffs.size() != n_coords) g->coeffs.resize(n_coords);
 	const std::vector<double> &weights = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	double product = 0;
 	for (int i = 0; i < coordinates.size(); i++) {
 	    product += model[coordinates[i]] * weights[i];
 	}
-	g->coeffs[0] = product;
+	for (int i = 0; i < coordinates.size(); i++) {
+	    int index = coordinates[i];
+	    g->coeffs[index] = product * weights[i];
+	}
     }
 
-    double Mu(int coordinate, double value) override {
-	return (lambda / n_coords);
+    void Mu(int coordinate, double &out) override {
+	out = lambda / n_coords;
     }
 
-    double Nu(int coordinate, double value, int index_into_coordinate_vector) override {
-	return B[coordinate] / n_coords;
+    void Nu(int coordinate, std::vector<double> &out) override {
+	out[0] = B[coordinate]/n_coords;
     }
 
-    double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) override {
-	return g->coeffs[0] * value;
+    void H(int coordinate, std::vector<double> &out, Gradient *g) override {
+	out[0] = g->coeffs[coordinate];
     }
 
     bool NeedsCatchup() override {

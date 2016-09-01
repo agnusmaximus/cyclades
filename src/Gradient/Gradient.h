@@ -11,7 +11,8 @@ class Datapoint;
 
 class Gradient {
  public:
-    std::vector<double> nu, mu, h;
+    std::vector<std::vector<double> > nu, h;
+    std::vector<double> mu;
     std::vector<double> coeffs;
     Datapoint *datapoint;
 
@@ -19,7 +20,6 @@ class Gradient {
     virtual ~Gradient() {}
 
     virtual void Clear() {
-	std::fill(coeffs.begin(), coeffs.end(), 0);
 	datapoint = NULL;
     }
 

@@ -102,21 +102,23 @@ class MCModel : public Model {
 	return false;
     }
 
-    double Mu(int coordinate, double value) override {
-	return 0;
+    void Mu(int coordinate, double &out) override {
+	out = 0;
     }
 
-    double Nu(int coordinate, double value, int index_into_coordinate_vector) override {
-	return 0;
+    void Nu(int coordinate, std::vector<double> &out) override {
+	std::fill(out.begin(), out.end(), 0);
     }
 
-    double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) override {
+    void H(int coordinate, std::vector<double> &out, Gradient *g) override {
 	double other_coordinate = 0;
 	if (g->datapoint->GetCoordinates()[0] == coordinate)
 	    other_coordinate = g->datapoint->GetCoordinates()[1];
 	else
 	    other_coordinate = g->datapoint->GetCoordinates()[0];
-	return g->coeffs[0] * model[other_coordinate * rlength + index_into_coordinate_vector];
+	for (int i = 0; i < rlength; i++) {
+	    out[i] = g->coeffs[0] * model[other_coordinate * rlength + i];
+	}
     }
 };
 

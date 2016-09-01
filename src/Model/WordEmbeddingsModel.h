@@ -130,18 +130,20 @@ class WordEmbeddingsModel : public Model {
 	c_sum_mult2[omp_get_thread_num()][index] = weight;
     }
 
-    virtual double Mu(int coordinate, double value) override {
-	return 0;
+    virtual void Mu(int coordinate, double &out) override {
+	out = 0;
     }
 
-    virtual double Nu(int coordinate, double value, int index_into_coordinate_vector) override {
-	return 0;
+    virtual void Nu(int coordinate, std::vector<double> &out) override {
+	std::fill(out.begin(), out.end(), 0);
     }
 
-    virtual double H(int coordinate, double value, int index_into_coordinate_vector, Gradient *g) override {
+    virtual void H(int coordinate, std::vector<double> &out, Gradient *g) override {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
-	return -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+index_into_coordinate_vector] + model[c2*w2v_length+index_into_coordinate_vector]));
+	for (int i = 0; i < w2v_length; i++) {
+	    out[i] = -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+i] + model[c2*w2v_length+i]));
+	}
     }
 
     virtual bool NeedsCatchup() override {
