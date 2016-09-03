@@ -37,10 +37,10 @@ class Model {
     // x_j = (1 - mu_j)x_j - nu_j + h_ij*x_S_i
     // Where h_ij = 0 for j not in S_i.
     // Return false if value is nnz, true otherwise.
-    virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) = 0;
-    virtual void Mu(int coordinate, double &out) = 0;
-    virtual void Nu(int coordinate, std::vector<double> &out) = 0;
-    virtual void H(int coordinate, std::vector<double> &out, Gradient *g) = 0;
+    virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) = 0;
+    virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) = 0;
+    virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) = 0;
+    virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) = 0;
 };
 
 #endif

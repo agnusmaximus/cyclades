@@ -93,7 +93,7 @@ class LSModel : public Model {
 	return model;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
 	if (g->coeffs.size() != n_coords) g->coeffs.resize(n_coords);
 	int row = ((LSDatapoint *)datapoint)->row;
 	double cp = 0;
@@ -110,15 +110,15 @@ class LSModel : public Model {
 	}
     }
 
-    void Mu(int coordinate, double &out) override {
+    void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
 	out = 0;
     }
 
-    void Nu(int coordinate, std::vector<double> &out) override {
+    void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
 	out[0] = 0;
     }
 
-    void H(int coordinate, std::vector<double> &out, Gradient *g) override {
+    void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	out[0] = g->coeffs[coordinate];
     }
 

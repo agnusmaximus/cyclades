@@ -178,7 +178,7 @@ public:
 	return model;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
 	if (g->coeffs.size() != n_coords) g->coeffs.resize(n_coords);
 	const std::vector<double> &weights = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
@@ -192,15 +192,15 @@ public:
 	}
     }
 
-    void Mu(int coordinate, double &out) override {
+    void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
 	out = lambda / n_coords;
     }
 
-    void Nu(int coordinate, std::vector<double> &out) override {
+    void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
 	out[0] = B[coordinate]/n_coords;
     }
 
-    void H(int coordinate, std::vector<double> &out, Gradient *g) override {
+    void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	out[0] = g->coeffs[coordinate];
     }
 };

@@ -16,6 +16,7 @@ protected:
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Mu(int coordinate, Gradient *g) = 0;
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
+    virtual void ComputeAllNuAndMu(Model *model, Gradient *g) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &model_data = model->ModelData();
@@ -57,20 +58,20 @@ protected:
 	std::vector<double> &model_data = model->ModelData();
 #pragma omp parallel num_threads(FLAGS_n_threads)
 	{
+	    Gradient *g = &thread_gradients[omp_get_thread_num()];
+	    ComputeAllNuAndMu(model, g);
 	    std::vector<double> nu(coordinate_size);
 #pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
-		double geom_sum = 0, mu = 0;
-		model->Mu(i, mu);
+		double geom_sum = 0, mu = Mu(i, g);
 		if (mu != 0) {
 		    geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
 		}
-		model->Nu(i, nu);
 		for (int j = 0; j < coordinate_size; j++) {
 		    model_data[i * coordinate_size + j] =
 			pow(1 - mu, diff) * model_data[i * coordinate_size + j]
-			- nu[j] * geom_sum;
+			- Nu(i, j, g) * geom_sum;
 		}
 	    }
 	}

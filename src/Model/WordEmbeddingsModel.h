@@ -110,7 +110,7 @@ class WordEmbeddingsModel : public Model {
 	return model;
     }
 
-    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g) override {
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
@@ -130,15 +130,15 @@ class WordEmbeddingsModel : public Model {
 	c_sum_mult2[omp_get_thread_num()][index] = weight;
     }
 
-    virtual void Mu(int coordinate, double &out) override {
+    virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
 	out = 0;
     }
 
-    virtual void Nu(int coordinate, std::vector<double> &out) override {
+    virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
 	std::fill(out.begin(), out.end(), 0);
     }
 
-    virtual void H(int coordinate, std::vector<double> &out, Gradient *g) override {
+    virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
 	for (int i = 0; i < w2v_length; i++) {
