@@ -78,8 +78,8 @@ DEFINE_bool(cyclades_trainer, false, "Cyclades training method (parallel).");
 DEFINE_bool(hogwild_trainer, false, "Hogwild training method (parallel).");
 
 // Flags for updating types.
-DEFINE_bool(sgd, false, "Use the hogwild-style SGD update method.");
-DEFINE_bool(minibatch_sgd, false, "Use the minibatch SGD update method.");
+DEFINE_bool(sgd, false, "Use the SGD update method.");
+DEFINE_bool(svrg, false, "Use the SVRG update method.");
 
 // Flags for application types.
 DEFINE_bool(matrix_completion, false, "Matrix completion application type.");
@@ -101,6 +101,7 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 
 #include "Updater/Updater.h"
 #include "Updater/SGDUpdater.h"
+#include "Updater/SVRGUpdater.h"
 
 #include "Partitioner/CycladesPartitioner.h"
 #include "Partitioner/DFSCachePartitioner.h"

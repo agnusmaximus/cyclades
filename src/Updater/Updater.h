@@ -12,11 +12,9 @@ protected:
     int n_threads;
     std::vector<int> bookkeeping;
 
-
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Mu(int coordinate, Gradient *g) = 0;
-
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {
@@ -75,6 +73,18 @@ protected:
 			- nu[j] * geom_sum;
 		}
 	    }
+	}
+    }
+
+    void Register2dVector(std::string name, int n_rows, int n_columns) {
+	for (int i = 0; i < FLAGS_n_threads; i++) {
+	    thread_gradients[i].Register2dVector(name, n_rows, n_columns);
+	}
+    }
+
+    void Register1dVector(std::string name, int n_columns) {
+	for (int i = 0; i < FLAGS_n_threads; i++) {
+	    thread_gradients[i].Register1dVector(name, n_columns);
 	}
     }
 

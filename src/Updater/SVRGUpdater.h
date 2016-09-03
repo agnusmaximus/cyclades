@@ -1,10 +1,10 @@
-#ifndef _SGD_UPDATER_
-#define _SGD_UPDATER_
+#ifndef _SVRG_UPDATER_
+#define _SVRG_UPDATER_
 
 #include "Updater.h"
 #include "../Gradient/Gradient.h"
 
-class SGDUpdater : public Updater {
+class SVRGUpdater : public Updater {
 protected:
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<std::vector<double> > &nu = g->Get2dVector("nu");
@@ -35,13 +35,13 @@ protected:
     }
 
  public:
-    SGDUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
+    SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
 	Register1dVector("mu", model->NumParameters());
 	Register2dVector("nu", model->NumParameters(), model->CoordinateSize());
 	Register2dVector("h", model->NumParameters(), model->CoordinateSize());
     }
 
-    ~SGDUpdater() {
+    ~SVRGUpdater() {
     }
 };
 

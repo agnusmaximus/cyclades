@@ -11,9 +11,9 @@ class Datapoint;
 
 class Gradient {
  public:
-    std::vector<std::vector<double> > nu, h;
-    std::vector<double> mu;
     std::vector<double> coeffs;
+    std::map<std::string, std::vector<std::vector<double> > > vectors_2d;
+    std::map<std::string, std::vector<double> > vectors_1d;
     Datapoint *datapoint;
 
     Gradient() {}
@@ -23,7 +23,25 @@ class Gradient {
 	datapoint = NULL;
     }
 
-    void SetUp(Model *model);
+    void Register2dVector(std::string name, int n_rows, int n_columns) {
+	vectors_2d[name].resize(n_rows, std::vector<double>(n_columns, 0));
+    }
+
+    void Register1dVector(std::string name, int n_rows) {
+	vectors_1d[name].resize(n_rows, 0);
+    }
+
+    std::vector<std::vector<double> > & Get2dVector(std::string name) {
+	return vectors_2d[name];
+    }
+
+    std::vector<double> & Get1dVector(std::string name) {
+	return vectors_1d[name];
+    }
+
+    void SetUp(Model *model) {
+
+    }
 };
 
 #endif
