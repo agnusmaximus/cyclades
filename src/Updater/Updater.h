@@ -13,7 +13,12 @@ protected:
     std::vector<int> bookkeeping;
     // [thread][name][2d_vector].
     std::vector<std::map<std::string, std::vector<std::vector<double> > > > thread_local_2d_vectors;
+    // [thread][name][1d_vector].
     std::vector<std::map<std::string, std::vector<double> > > thread_local_1d_vectors;
+    // [name][2d_vector].
+    std::map<std::string, std::vector<std::vector<double> > > global_2d_vectors;
+    // [name][1d_vector].
+    std::map<std::string, std::vector<double > > global_1d_vectors;
 
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
@@ -80,6 +85,22 @@ protected:
 		}
 	    }
 	}
+    }
+
+    void RegisterGlobal2dVector(std::string name, int n_rows, int n_columns) {
+	global_2d_vectors[name].resize(n_rows, std::vector<double>(n_columns, 0));
+    }
+
+    void RegisterGlobal1dVector(std::string name, int n_cols) {
+	global_1d_vectors[name].resize(n_cols, 0);
+    }
+
+    std::vector<std::vector<double> > & GetGlobal2dVector(std::string name) {
+	return global_2d_vectors[name];
+    }
+
+    std::vector<double> & GetGlobal1dVector(std::string name) {
+	return global_1d_vectors[name];
     }
 
     void RegisterThreadLocal2dVector(std::string name, int n_rows, int n_columns) {

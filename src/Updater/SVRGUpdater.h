@@ -40,11 +40,10 @@ protected:
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
 	return -FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
 				       GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
-
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return FLAGS_learning_rate * (GetThreadLocal2dVector("g")[coordinate][index_into_coordinate_vector] -
+	return FLAGS_learning_rate * (GetGlobal2dVector("g")[coordinate][index_into_coordinate_vector] -
 				      GetThreadLocal1dVector("lambda")[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
     }
 
@@ -54,7 +53,7 @@ protected:
 
  public:
  SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
-	RegisterThreadLocal2dVector("g", model->NumParameters(), model->CoordinateSize());
+	RegisterGlobal2dVector("g", model->NumParameters(), model->CoordinateSize());
 	RegisterThreadLocal1dVector("lambda", model->NumParameters());
 	RegisterThreadLocal2dVector("h_x", model->NumParameters(), model->CoordinateSize());
 	RegisterThreadLocal2dVector("h_y", model->NumParameters(), model->CoordinateSize());
@@ -74,11 +73,10 @@ protected:
 
 	// Compute average sum of gradients of the model_copy.
 	Gradient *grad = &thread_gradients[omp_get_thread_num()];
-	std::vector<std::vector<double> > &g = GetThreadLocal2dVector("g");
+	std::vector<std::vector<double> > &g = GetGlobal2dVector("g");
 	for (auto & v : g)
 	    std::fill(v.begin(), v.end(), 0);
 
-	std::vector<double> &gg = GetThreadLocal1dVector("g");
 	std::vector<std::vector<double> > &nu = GetThreadLocal2dVector("kappa");
 	std::vector<double> &mu = GetThreadLocal1dVector("lambda");
 	std::vector<std::vector<double> > &h = GetThreadLocal2dVector("h_x");
