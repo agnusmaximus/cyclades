@@ -10,7 +10,7 @@ protected:
 
     virtual void ComputeAllNuAndMu(Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<double> &lambda = g->Get1dVector("lambda");
+	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
 	for (int i = 0; i < model->NumParameters(); i++) {
 	    model->Mu(i, lambda[i], cur_model);
 	}
@@ -18,9 +18,9 @@ protected:
 
     virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &h_x = g->Get2dVector("h_x");
-	std::vector<std::vector<double> > &h_y = g->Get2dVector("h_y");
-	std::vector<double> &lambda = g->Get1dVector("lambda");
+	std::vector<std::vector<double> > &h_x = GetThreadLocal2dVector("h_x");
+	std::vector<std::vector<double> > &h_y = GetThreadLocal2dVector("h_y");
+	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
 
 	g->datapoint = datapoint;
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
@@ -38,29 +38,29 @@ protected:
     }
 
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return -FLAGS_learning_rate * (g->Get2dVector("h_x")[coordinate][index_into_coordinate_vector] -
-				       g->Get2dVector("h_y")[coordinate][index_into_coordinate_vector]);
+	return -FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
+				       GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
 
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return FLAGS_learning_rate * (g->Get2dVector("g")[coordinate][index_into_coordinate_vector] -
-				      g->Get1dVector("lambda")[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
+	return FLAGS_learning_rate * (GetThreadLocal2dVector("g")[coordinate][index_into_coordinate_vector] -
+				      GetThreadLocal1dVector("lambda")[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
     }
 
     double Mu(int coordinate, Gradient *g) {
-	return g->Get1dVector("lambda")[coordinate] * FLAGS_learning_rate;
+	return GetThreadLocal1dVector("lambda")[coordinate] * FLAGS_learning_rate;
     }
 
  public:
  SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
-	Register2dVector("g", model->NumParameters(), model->CoordinateSize());
-	Register1dVector("lambda", model->NumParameters());
-	Register2dVector("h_x", model->NumParameters(), model->CoordinateSize());
-	Register2dVector("h_y", model->NumParameters(), model->CoordinateSize());
+	RegisterThreadLocal2dVector("g", model->NumParameters(), model->CoordinateSize());
+	RegisterThreadLocal1dVector("lambda", model->NumParameters());
+	RegisterThreadLocal2dVector("h_x", model->NumParameters(), model->CoordinateSize());
+	RegisterThreadLocal2dVector("h_y", model->NumParameters(), model->CoordinateSize());
 	model_copy.resize(model->ModelData().size());
 
-	Register2dVector("kappa", model->NumParameters(), model->CoordinateSize());
+	RegisterThreadLocal2dVector("kappa", model->NumParameters(), model->CoordinateSize());
     }
 
     ~SVRGUpdater() {
@@ -74,14 +74,14 @@ protected:
 
 	// Compute average sum of gradients of the model_copy.
 	Gradient *grad = &thread_gradients[omp_get_thread_num()];
-	std::vector<std::vector<double> > &g = grad->Get2dVector("g");
+	std::vector<std::vector<double> > &g = GetThreadLocal2dVector("g");
 	for (auto & v : g)
 	    std::fill(v.begin(), v.end(), 0);
 
-	std::vector<double> &gg = grad->Get1dVector("g");
-	std::vector<std::vector<double> > &nu = grad->Get2dVector("kappa");
-	std::vector<double> &mu = grad->Get1dVector("lambda");
-	std::vector<std::vector<double> > &h = grad->Get2dVector("h_x");
+	std::vector<double> &gg = GetThreadLocal1dVector("g");
+	std::vector<std::vector<double> > &nu = GetThreadLocal2dVector("kappa");
+	std::vector<double> &mu = GetThreadLocal1dVector("lambda");
+	std::vector<std::vector<double> > &h = GetThreadLocal2dVector("h_x");
 
 	int n_coords = model->NumParameters();
 	int coordinate_size = model->CoordinateSize();

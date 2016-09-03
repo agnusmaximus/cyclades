@@ -11,6 +11,9 @@ protected:
     std::vector<Datapoint *> datapoints;
     int n_threads;
     std::vector<int> bookkeeping;
+    // [thread][name][2d_vector].
+    std::vector<std::map<std::string, std::vector<std::vector<double> > > > thread_local_2d_vectors;
+    std::vector<std::map<std::string, std::vector<double> > > thread_local_1d_vectors;
 
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
@@ -79,17 +82,26 @@ protected:
 	}
     }
 
-    void Register2dVector(std::string name, int n_rows, int n_columns) {
-	for (int i = 0; i < FLAGS_n_threads; i++) {
-	    thread_gradients[i].Register2dVector(name, n_rows, n_columns);
+    void RegisterThreadLocal2dVector(std::string name, int n_rows, int n_columns) {
+	for (int i = 0; i <FLAGS_n_threads; i++) {
+	    thread_local_2d_vectors[i][name].resize(n_rows, std::vector<double>(n_columns, 0));
 	}
     }
 
-    void Register1dVector(std::string name, int n_columns) {
-	for (int i = 0; i < FLAGS_n_threads; i++) {
-	    thread_gradients[i].Register1dVector(name, n_columns);
+    void RegisterThreadLocal1dVector(std::string name, int n_columns) {
+	for (int i = 0; i <FLAGS_n_threads; i++) {
+	    thread_local_1d_vectors[i][name].resize(n_columns, 0);
 	}
     }
+
+    std::vector<std::vector<double> > & GetThreadLocal2dVector(std::string name) {
+	return thread_local_2d_vectors[omp_get_thread_num()][name];
+    }
+
+    std::vector<double> & GetThreadLocal1dVector(std::string name) {
+	return thread_local_1d_vectors[omp_get_thread_num()][name];
+    }
+
 
 public:
     Updater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) {
@@ -101,6 +113,10 @@ public:
 	    thread_gradients[thread].SetUp(model);
 	}
 	this->model = model;
+
+	// Create thread local vectors for each thread.
+	thread_local_2d_vectors.resize(n_threads);
+	thread_local_1d_vectors.resize(n_threads);
 
 	// Set up bookkeping.
 	this->datapoints = datapoints;
