@@ -15,7 +15,9 @@ protected:
     virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
     virtual double Mu(int coordinate, Gradient *g) = 0;
+    // Expect that calls to Nu, Mu, and H are ready for all coordinates touched by datapoint.
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) = 0;
+    // Expect that calls to Nu and Mu are ready for all coordinates.
     virtual void ComputeAllNuAndMu(Model *model, Gradient *g) = 0;
 
     virtual void ApplyGradient(Model *model, Datapoint *datapoint, Gradient *g) {

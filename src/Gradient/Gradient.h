@@ -32,11 +32,11 @@ class Gradient {
     }
 
     std::vector<std::vector<double> > & Get2dVector(std::string name) {
-	return vectors_2d[name];
+	return vectors_2d.find(name)->second;
     }
 
     std::vector<double> & Get1dVector(std::string name) {
-	return vectors_1d[name];
+	return vectors_1d.find(name)->second;
     }
 
     void SetUp(Model *model) {

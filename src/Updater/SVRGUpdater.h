@@ -9,22 +9,31 @@ protected:
     std::vector<double> model_copy;
 
     virtual void ComputeAllNuAndMu(Model *model, Gradient *g) {
-
+	std::vector<double> &cur_model = model->ModelData();
+	std::vector<double> &lambda = g->Get1dVector("lambda");
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    model->Mu(i, lambda[i], cur_model);
+	}
     }
 
     virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &h_x = g->Get2dVector("h_x");
 	std::vector<std::vector<double> > &h_y = g->Get2dVector("h_y");
-	std::vector<double> &mu = g->Get1dVector("lambda");
+	std::vector<double> &lambda = g->Get1dVector("lambda");
 
 	g->datapoint = datapoint;
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->Mu(index, mu[index], cur_model);
+	    model->Mu(index, lambda[index], cur_model);
 	    model->H(index, h_x[index], g, cur_model);
+	}
+	model->PrecomputeCoefficients(datapoint, g, model_copy);
+	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
+	    int index = datapoint->GetCoordinates()[i];
+	    model->H(index, h_y[index], g, model_copy);
 	}
     }
 
@@ -45,7 +54,7 @@ protected:
 
  public:
  SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
-	Register1dVector("g", model->NumParameters());
+	Register2dVector("g", model->NumParameters(), model->CoordinateSize());
 	Register1dVector("lambda", model->NumParameters());
 	Register2dVector("h_x", model->NumParameters(), model->CoordinateSize());
 	Register2dVector("h_y", model->NumParameters(), model->CoordinateSize());
@@ -62,7 +71,10 @@ protected:
 	model_copy = model->ModelData();
 
 	// Compute average sum of gradients of the model_copy.
-
+	Gradient *grad = &thread_gradients[omp_get_thread_num()];
+	//std::vector<std::vector<double> > &g = grad->Get2dVector("g");
+	//for (int i = 0; i < datapoints.size(); i++) {
+	//}
     }
 };
 
