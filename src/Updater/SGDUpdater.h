@@ -6,7 +6,7 @@
 
 class SGDUpdater : public Updater {
 protected:
-    virtual void ComputeAllNuAndMu(Model *model, Gradient *g) {
+    virtual void ComputeAllNuAndMu(Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &nu = g->Get2dVector("nu");
 	std::vector<double> &mu = g->Get1dVector("mu");
@@ -16,7 +16,7 @@ protected:
 	}
     }
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
+    virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &nu = g->Get2dVector("nu");
 	std::vector<std::vector<double> > &h = g->Get2dVector("h");

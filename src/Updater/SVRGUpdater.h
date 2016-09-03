@@ -8,7 +8,7 @@ class SVRGUpdater : public Updater {
 protected:
     std::vector<double> model_copy;
 
-    virtual void ComputeAllNuAndMu(Model *model, Gradient *g) {
+    virtual void ComputeAllNuAndMu(Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<double> &lambda = g->Get1dVector("lambda");
 	for (int i = 0; i < model->NumParameters(); i++) {
@@ -16,7 +16,7 @@ protected:
 	}
     }
 
-    virtual void ComputeGradient(Model *model, Datapoint *datapoint, Gradient *g) {
+    virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &h_x = g->Get2dVector("h_x");
 	std::vector<std::vector<double> > &h_y = g->Get2dVector("h_y");
@@ -59,22 +59,60 @@ protected:
 	Register2dVector("h_x", model->NumParameters(), model->CoordinateSize());
 	Register2dVector("h_y", model->NumParameters(), model->CoordinateSize());
 	model_copy.resize(model->ModelData().size());
+
+	Register2dVector("kappa", model->NumParameters(), model->CoordinateSize());
     }
 
     ~SVRGUpdater() {
     }
 
-    void EpochFinish() override {
-	Updater::EpochFinish();
+    void EpochBegin() override {
+	Updater::EpochBegin();
 
 	// Make a copy of the model every epoch.
 	model_copy = model->ModelData();
 
 	// Compute average sum of gradients of the model_copy.
 	Gradient *grad = &thread_gradients[omp_get_thread_num()];
-	//std::vector<std::vector<double> > &g = grad->Get2dVector("g");
-	//for (int i = 0; i < datapoints.size(); i++) {
-	//}
+	std::vector<std::vector<double> > &g = grad->Get2dVector("g");
+	for (auto & v : g)
+	    std::fill(v.begin(), v.end(), 0);
+
+	std::vector<double> &gg = grad->Get1dVector("g");
+	std::vector<std::vector<double> > &nu = grad->Get2dVector("kappa");
+	std::vector<double> &mu = grad->Get1dVector("lambda");
+	std::vector<std::vector<double> > &h = grad->Get2dVector("h_x");
+
+	int n_coords = model->NumParameters();
+	int coordinate_size = model->CoordinateSize();
+	for (int dp = 0; dp < datapoints.size(); dp++) {
+	    Datapoint *datapoint = datapoints[dp];
+
+	    for (auto & v : h)
+		std::fill(v.begin(), v.end(), 0);
+	    for (auto & v : nu)
+		std::fill(v.begin(), v.end(), 0);
+	    std::fill(mu.begin(), mu.end(), 0);
+
+	    model->PrecomputeCoefficients(datapoint, grad, model->ModelData());
+
+	    // Compute the origial sgd gradients needed in order to sum them.
+	    for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
+		int index = datapoint->GetCoordinates()[i];
+		model->Mu(index, mu[index], model->ModelData());
+		model->Nu(index, nu[index], model->ModelData());
+		model->H(index, h[index], grad, model->ModelData());
+	    }
+
+	    // Calc the gradients.
+	    for (int i = 0; i < n_coords; i++) {
+		for (int j = 0; j < coordinate_size; j++) {
+		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] - nu[i][j] + h[i][j]) / datapoints.size();
+		}
+	    }
+
+	    // Sum the gradients now
+	}
     }
 };
 
