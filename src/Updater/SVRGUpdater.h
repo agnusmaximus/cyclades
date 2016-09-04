@@ -105,14 +105,14 @@ protected:
 
 	// Compute average sum of gradients on the model copy.
 	// Essentially perform SGD on it.
-	std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
-	std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
-	std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
 	std::vector<double> &n_zeroes = GET_GLOBAL_VECTOR(n_zeroes);
 	int coord_size = model->CoordinateSize();
 
 	// zero gradients.
+#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int coordinate = 0; coordinate < model->NumParameters(); coordinate++) {
+	    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
+	    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
 	    model->Nu(coordinate, g_nu[coordinate], model_copy);
 	    model->Mu(coordinate, g_mu[coordinate], model_copy);
 	    for (int j = 0; j < coord_size; j++) {
@@ -121,11 +121,15 @@ protected:
 	}
 
 	// non zero gradients.
+#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    Datapoint *datapoint = datapoints[dp];
 	    Gradient *grad = &thread_gradients[omp_get_thread_num()];
 	    grad->datapoint = datapoint;
 	    model->PrecomputeCoefficients(datapoint, grad, model_copy);
+	    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
+	    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
+	    std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
 	    for (auto & coord : datapoint->GetCoordinates()) {
 		model->H(coord, g_h[coord], grad, model_copy);
 		model->Mu(coord, g_mu[coord], model_copy);
@@ -139,6 +143,7 @@ protected:
 	    }
 	}
 
+#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int i = 0; i < model->NumParameters(); i++) {
 	    for (int j = 0; j < coord_size; j++) {
 		g[i*coord_size+j] /= datapoints.size();
