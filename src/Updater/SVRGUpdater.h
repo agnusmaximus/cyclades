@@ -38,17 +38,17 @@ protected:
 	}
     }
 
-    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    double H(int coordinate, int index_into_coordinate_vector) {
 	return FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
 				      GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
     }
 
-    double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    double Nu(int coordinate, int index_into_coordinate_vector) {
 	return FLAGS_learning_rate * (GetGlobal2dVector("g")[coordinate][index_into_coordinate_vector] -
 				      GetThreadLocal1dVector("lambda")[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
     }
 
-    double Mu(int coordinate, Gradient *g) {
+    double Mu(int coordinate) {
 	return GetThreadLocal1dVector("lambda")[coordinate] * FLAGS_learning_rate;
     }
 

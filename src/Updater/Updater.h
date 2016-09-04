@@ -11,18 +11,21 @@ protected:
     std::vector<Datapoint *> datapoints;
     int n_threads;
     std::vector<int> bookkeeping;
+
+    // The following datastructures are used to store extra 1d/2d vectors
+    // on the fly, which may be needed by a subclass.
     // [thread][name][2d_vector].
     std::vector<std::map<std::string, std::vector<std::vector<double> > > > thread_local_2d_vectors;
-    // [thread][name][1d_vector].
     std::vector<std::map<std::string, std::vector<double> > > thread_local_1d_vectors;
     // [name][2d_vector].
     std::map<std::string, std::vector<std::vector<double> > > global_2d_vectors;
-    // [name][1d_vector].
     std::map<std::string, std::vector<double > > global_1d_vectors;
 
-    virtual double H(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
-    virtual double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) = 0;
-    virtual double Mu(int coordinate, Gradient *g) = 0;
+    // H, Nu and Mu for updates.
+    virtual double H(int coordinate, int index_into_coordinate_vector) = 0;
+    virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
+    virtual double Mu(int coordinate) = 0;
+
     // Expect that calls to Nu, Mu, and H are ready for all coordinates touched by datapoint.
     virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) = 0;
     // Expect that calls to Nu and Mu are ready for all coordinates.
@@ -33,11 +36,11 @@ protected:
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    double mu = Mu(index, g);
+	    double mu = Mu(index);
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] = (1 - mu) * model_data[index * coordinate_size + j]
-		    - Nu(index, j, g)
-		    + H(index, j, g);
+		    - Nu(index, j)
+		    + H(index, j);
 	    }
 	}
     }
@@ -51,14 +54,14 @@ protected:
 	    int diff = order - bookkeeping[index] - 1;
 	    if (diff < 0) diff = 0;
 	    double geom_sum = 0;
-	    double mu = Mu(index, g);
+	    double mu = Mu(index);
 	    if (mu != 0) {
  		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
 		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
-		    - Nu(index, j, g) * geom_sum;
+		    - Nu(index, j) * geom_sum;
 	    }
 	}
     }
@@ -73,14 +76,14 @@ protected:
 	    #pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
-		double geom_sum = 0, mu = Mu(i, g);
+		double geom_sum = 0, mu = Mu(i);
 		if (mu != 0) {
 		    geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
 		}
 		for (int j = 0; j < coordinate_size; j++) {
 		    model_data[i * coordinate_size + j] =
 			pow(1 - mu, diff) * model_data[i * coordinate_size + j]
-			- Nu(i, j, g) * geom_sum;
+			- Nu(i, j) * geom_sum;
 		}
 	    }
 	}

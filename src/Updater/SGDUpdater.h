@@ -33,15 +33,15 @@ protected:
 	}
     }
 
-    double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    double H(int coordinate, int index_into_coordinate_vector) {
 	return GetThreadLocal2dVector("h")[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
-    double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {
+    double Nu(int coordinate, int index_into_coordinate_vector) {
 	return GetThreadLocal2dVector("nu")[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
-    double Mu(int coordinate, Gradient *g) {
+    double Mu(int coordinate) {
 	return GetThreadLocal1dVector("mu")[coordinate] * FLAGS_learning_rate;
     }
 
