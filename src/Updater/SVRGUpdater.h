@@ -105,7 +105,7 @@ protected:
 	    // Calc the gradients.
 	    for (int i = 0; i < n_coords; i++) {
 		for (int j = 0; j < coordinate_size; j++) {
-		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] - nu[i][j] + h[i][j]) / datapoints.size();
+		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] + nu[i][j] + h[i][j]) / datapoints.size();
 		}
 	    }
 
