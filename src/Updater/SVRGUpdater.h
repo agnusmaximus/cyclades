@@ -109,7 +109,6 @@ protected:
 	int coord_size = model->CoordinateSize();
 
 	// zero gradients.
-#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int coordinate = 0; coordinate < model->NumParameters(); coordinate++) {
 	    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
 	    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
@@ -121,7 +120,6 @@ protected:
 	}
 
 	// non zero gradients.
-#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    Datapoint *datapoint = datapoints[dp];
 	    Gradient *grad = &thread_gradients[omp_get_thread_num()];
@@ -143,7 +141,6 @@ protected:
 	    }
 	}
 
-#pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int i = 0; i < model->NumParameters(); i++) {
 	    for (int j = 0; j < coord_size; j++) {
 		g[i*coord_size+j] /= datapoints.size();
