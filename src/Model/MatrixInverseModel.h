@@ -152,7 +152,7 @@ public:
 	    sum_sqr += model[i] * model[i];
 	}
 
-	//#pragma omp parallel for num_threads(FLAGS_n_threads) reduction(+:loss)
+#pragma omp parallel for num_threads(FLAGS_n_threads) reduction(+:loss)
 	for (int i = 0; i < datapoints.size(); i++) {
 	    double ai_t_x = 0;
 	    double first = sum_sqr / (double)n_coords * lambda;
@@ -173,7 +173,6 @@ public:
 		m_i = i;
 	    }
 	}
-	std::cout << d << " " << mm << " " << m_i  << std::endl;
 	return loss + 2;
     }
 
