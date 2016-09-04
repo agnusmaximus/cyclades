@@ -17,7 +17,7 @@ protected:
     REGISTER_THREAD_LOCAL_2D_VECTOR(g_nu);
     REGISTER_THREAD_LOCAL_1D_VECTOR(g_mu);
     REGISTER_THREAD_LOCAL_2D_VECTOR(g_h);
-    REGISTER_GLOBAL_1D_VECTOR(g_bookkeeping);
+    REGISTER_GLOBAL_1D_VECTOR(n_zeroes);
 
     void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
@@ -74,7 +74,20 @@ protected:
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_nu, model->NumParameters(), model->CoordinateSize());
 	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_mu, model->NumParameters());
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_GLOBAL_1D_VECTOR(g_bookkeeping, model->NumParameters());
+
+	// Compute number of zeroes for each column (parameters) of the model.
+	INITIALIZE_GLOBAL_1D_VECTOR(n_zeroes, model->NumParameters());
+	std::vector<double> &n_zeroes = GET_GLOBAL_VECTOR(n_zeroes);
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    n_zeroes[i] = datapoints.size();
+	}
+	int sum = 0;
+	for (int dp = 0; dp < datapoints.size(); dp++) {
+	    for (auto &coordinate : datapoints[dp]->GetCoordinates()) {
+		n_zeroes[coordinate]--;
+		sum++;
+	    }
+	}
     }
 
     ~SVRGUpdater() {
@@ -95,49 +108,42 @@ protected:
 	std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
 	std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
 	std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
-	std::vector<double> &g_bookkeeping = GET_GLOBAL_VECTOR(g_bookkeeping);
-	std::fill(g_bookkeeping.begin(), g_bookkeeping.end(), 0);
+	std::vector<double> &n_zeroes = GET_GLOBAL_VECTOR(n_zeroes);
 	int coord_size = model->CoordinateSize();
 
-	// Compute average sum of gradients of the model_copy.
-	/*Gradient *grad = &thread_gradients[omp_get_thread_num()];
-	std::vector<std::vector<double> > &g = GET_GLOBAL_VECTOR(g);
-	for (auto & v : g)
-	    std::fill(v.begin(), v.end(), 0);
+	// zero gradients.
+	for (int coordinate = 0; coordinate < model->NumParameters(); coordinate++) {
+	    model->Nu(coordinate, g_nu[coordinate], model_copy);
+	    model->Mu(coordinate, g_mu[coordinate], model_copy);
+	    for (int j = 0; j < coord_size; j++) {
+		g[coordinate*coord_size+j] = (g_mu[coordinate] * model_copy[coordinate*coord_size+j] + g_nu[coordinate][j]) * n_zeroes[coordinate];
+	    }
+	}
 
-	std::vector<std::vector<double> > &nu = GET_THREAD_LOCAL_VECTOR(kappa);
-	std::vector<double> &mu = GET_THREAD_LOCAL_VECTOR(lambda);
-	std::vector<std::vector<double> > &h = GET_THREAD_LOCAL_VECTOR(h_x);
-
-	int n_coords = model->NumParameters();
-	int coordinate_size = model->CoordinateSize();
+	// non zero gradients.
 	for (int dp = 0; dp < datapoints.size(); dp++) {
 	    Datapoint *datapoint = datapoints[dp];
-
-	    for (auto & v : h)
-		std::fill(v.begin(), v.end(), 0);
-	    for (auto & v : nu)
-		std::fill(v.begin(), v.end(), 0);
-	    std::fill(mu.begin(), mu.end(), 0);
-	    std::fill(grad->coeffs.begin(), grad->coeffs.end(), 0);
-
-	    model->PrecomputeCoefficients(datapoint, grad, model->ModelData());
-
-	    // Compute the origial sgd gradients needed in order to sum them.
-	    //for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
-	    for (int i = 0; i < n_coords; i++) {
-		model->Mu(i, mu[i], model->ModelData());
-		model->Nu(i, nu[i], model->ModelData());
-		model->H(i, h[i], grad, model->ModelData());
+	    Gradient *grad = &thread_gradients[omp_get_thread_num()];
+	    grad->datapoint = datapoint;
+	    model->PrecomputeCoefficients(datapoint, grad, model_copy);
+	    for (auto & coord : datapoint->GetCoordinates()) {
+		model->H(coord, g_h[coord], grad, model_copy);
+		model->Mu(coord, g_mu[coord], model_copy);
+		model->Nu(coord, g_nu[coord], model_copy);
 	    }
-
-	    // Calc the gradients.
-	    for (int i = 0; i < n_coords; i++) {
-		for (int j = 0; j < coordinate_size; j++) {
-		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] + nu[i][j] - h[i][j]) / datapoints.size();
+	    for (auto & coord : datapoint->GetCoordinates()) {
+		for (int j = 0; j < coord_size; j++) {
+		    g[coord*coord_size+j] += g_mu[coord] * model_copy[coord*coord_size+j]
+			+ g_nu[coord][j] - g_h[coord][j];
 		}
 	    }
-	    }*/
+	}
+
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    for (int j = 0; j < coord_size; j++) {
+		g[i*coord_size+j] /= datapoints.size();
+	    }
+	}
     }
 };
 
