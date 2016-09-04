@@ -95,6 +95,7 @@ protected:
     void FinalCatchUp() {
 	int coordinate_size = model->CoordinateSize();
 	std::vector<double> &model_data = model->ModelData();
+	return;
 #pragma omp parallel num_threads(FLAGS_n_threads)
 	{
 	    PrepareNu(all_coordinates);

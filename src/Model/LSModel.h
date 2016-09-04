@@ -66,7 +66,7 @@ class LSModel : public Model {
 
     double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
 	double loss = 0;
-#pragma omp parallel for num_threads(FLAGS_n_threads) reduction(+:loss)
+
 	for (int i = 0; i < datapoints.size(); i++) {
 	    Datapoint *datapoint = datapoints[i];
 	    double cross_product = 0;

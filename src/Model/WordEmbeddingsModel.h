@@ -11,8 +11,7 @@ class WordEmbeddingsModel : public Model {
  private:
     std::vector<double> model;
     double C;
-    std::vector<std::vector<double> > c_sum_mult1, c_sum_mult2;
-    std::vector<double> c_thread_index_tracker;
+    std::vector<double > c_sum_mult1, c_sum_mult2;
     int n_words;
     int w2v_length;
 
@@ -50,7 +49,6 @@ class WordEmbeddingsModel : public Model {
 	// Initialize C_sum_mult variables.
 	c_sum_mult1.resize(FLAGS_n_threads);
 	c_sum_mult2.resize(FLAGS_n_threads);
-	c_thread_index_tracker.resize(FLAGS_n_threads);
 	// First calculate number of datapoints per thread.
 	int max_datapoints = 0;
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
@@ -58,8 +56,8 @@ class WordEmbeddingsModel : public Model {
 	    for (int batch = 0; batch < partitions.NumBatches(); batch++) {
 		n_datapoints_for_thread += partitions.NumDatapointsInBatch(thread, batch);
 	    }
-	    c_sum_mult1[thread].resize(n_datapoints_for_thread);
-	    c_sum_mult2[thread].resize(n_datapoints_for_thread);
+	    c_sum_mult1[thread] = 0;
+	    c_sum_mult2[thread] = 0;
 	}
     }
 
@@ -87,15 +85,13 @@ class WordEmbeddingsModel : public Model {
 	// Update C based on C_sum_mult.
 	double C_A = 0, C_B = 0;
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
-	    for (int index = 0; index < c_sum_mult1[thread].size(); index++) {
-		C_A += c_sum_mult1[thread][index];
-		C_B += c_sum_mult2[thread][index];
-	    }
+	    C_A += c_sum_mult1[thread];
+	    C_B += c_sum_mult2[thread];
+	    c_sum_mult1[thread] = 0;
+	    c_sum_mult2[thread] = 0;
 	}
-	C = C_A / C_B;
 
-	// Reset c sum index tracker.
-	std::fill(c_thread_index_tracker.begin(), c_thread_index_tracker.end(), 0);
+	C = C_A / C_B;
     }
 
     int CoordinateSize() override {
@@ -125,9 +121,8 @@ class WordEmbeddingsModel : public Model {
 	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
 
 	// Do some extra computation for C.
-	int index = c_thread_index_tracker[omp_get_thread_num()]++;
-	c_sum_mult1[omp_get_thread_num()][index] = weight * (log(weight) - norm);
-	c_sum_mult2[omp_get_thread_num()][index] = weight;
+	c_sum_mult1[omp_get_thread_num()] += weight * (log(weight) - norm);
+	c_sum_mult2[omp_get_thread_num()] += weight;
     }
 
     virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
