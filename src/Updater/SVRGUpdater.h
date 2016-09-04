@@ -7,10 +7,15 @@
 class SVRGUpdater : public Updater {
 protected:
     std::vector<double> model_copy;
+    REGISTER_THREAD_LOCAL_1D_VECTOR(lambda);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(h_x);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(h_y);
+    REGISTER_GLOBAL_2D_VECTOR(g);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(kappa);
 
     void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
+	std::vector<double> &lambda = GET_THREAD_LOCAL_VECTOR(lambda);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
 	    model->Mu(index, lambda[index], cur_model);
@@ -22,8 +27,8 @@ protected:
 
     void PrepareH(Datapoint *datapoint, Gradient *g) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &h_x = GetThreadLocal2dVector("h_x");
-	std::vector<std::vector<double> > &h_y = GetThreadLocal2dVector("h_y");
+	std::vector<std::vector<double> > &h_x = GET_THREAD_LOCAL_VECTOR(h_x);
+	std::vector<std::vector<double> > &h_y = GET_THREAD_LOCAL_VECTOR(h_y);
 
 	g->datapoint = datapoint;
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
@@ -40,28 +45,27 @@ protected:
     }
 
     double H(int coordinate, int index_into_coordinate_vector) {
-	return FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
-				      GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
+	return FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h_x)[coordinate][index_into_coordinate_vector] -
+				      GET_THREAD_LOCAL_VECTOR(h_y)[coordinate][index_into_coordinate_vector]);
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
-	return FLAGS_learning_rate * (GetGlobal2dVector("g")[coordinate][index_into_coordinate_vector] -
-				      GetThreadLocal1dVector("lambda")[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
+	return FLAGS_learning_rate * (GET_GLOBAL_VECTOR(g)[coordinate][index_into_coordinate_vector] -
+				      GET_THREAD_LOCAL_VECTOR(lambda)[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
     }
 
     double Mu(int coordinate) {
-	return GetThreadLocal1dVector("lambda")[coordinate] * FLAGS_learning_rate;
+	return GET_THREAD_LOCAL_VECTOR(lambda)[coordinate] * FLAGS_learning_rate;
     }
 
  public:
  SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	RegisterGlobal2dVector("g", model->NumParameters(), model->CoordinateSize());
-	RegisterThreadLocal1dVector("lambda", model->NumParameters());
-	RegisterThreadLocal2dVector("h_x", model->NumParameters(), model->CoordinateSize());
-	RegisterThreadLocal2dVector("h_y", model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_GLOBAL_2D_VECTOR(g, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(lambda, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_x, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_y, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(kappa, model->NumParameters(), model->CoordinateSize());
 	model_copy.resize(model->ModelData().size());
-
-	RegisterThreadLocal2dVector("kappa", model->NumParameters(), model->CoordinateSize());
     }
 
     ~SVRGUpdater() {
@@ -75,13 +79,13 @@ protected:
 
 	// Compute average sum of gradients of the model_copy.
 	Gradient *grad = &thread_gradients[omp_get_thread_num()];
-	std::vector<std::vector<double> > &g = GetGlobal2dVector("g");
+	std::vector<std::vector<double> > &g = GET_GLOBAL_VECTOR(g);
 	for (auto & v : g)
 	    std::fill(v.begin(), v.end(), 0);
 
-	std::vector<std::vector<double> > &nu = GetThreadLocal2dVector("kappa");
-	std::vector<double> &mu = GetThreadLocal1dVector("lambda");
-	std::vector<std::vector<double> > &h = GetThreadLocal2dVector("h_x");
+	std::vector<std::vector<double> > &nu = GET_THREAD_LOCAL_VECTOR(kappa);
+	std::vector<double> &mu = GET_THREAD_LOCAL_VECTOR(lambda);
+	std::vector<std::vector<double> > &h = GET_THREAD_LOCAL_VECTOR(h_x);
 
 	int n_coords = model->NumParameters();
 	int coordinate_size = model->CoordinateSize();

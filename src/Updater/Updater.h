@@ -4,6 +4,25 @@
 #include "../DatapointPartitions/DatapointPartitions.h"
 #include "../Gradient/Gradient.h"
 
+// Some ugly macros to declare extra thread-local / global 1d/2d vectors.
+// This avoids the use of std::maps, which are very inefficient.
+// Gives around a 2-3x speedup over using maps.
+#define REGISTER_THREAD_LOCAL_1D_VECTOR(NAME) std::vector<std::vector<double> > NAME ## _LOCAL_
+#define REGISTER_THREAD_LOCAL_2D_VECTOR(NAME) std::vector<std::vector<std::vector<double> > > NAME ## _LOCAL_
+
+#define INITIALIZE_THREAD_LOCAL_1D_VECTOR(NAME, N_COLUMNS) {NAME##_LOCAL_.resize(FLAGS_n_threads); for (int i = 0; i < FLAGS_n_threads; i++) NAME ## _LOCAL_[i].resize(N_COLUMNS, 0);}
+#define INITIALIZE_THREAD_LOCAL_2D_VECTOR(NAME, N_ROWS, N_COLUMNS) {NAME##_LOCAL_.resize(FLAGS_n_threads); for (int i = 0; i < FLAGS_n_threads; i++) NAME ## _LOCAL_[i].resize(N_ROWS, std::vector<double>(N_COLUMNS, 0));}
+
+#define GET_THREAD_LOCAL_VECTOR(NAME) NAME ## _LOCAL_[omp_get_thread_num()]
+
+#define REGISTER_GLOBAL_1D_VECTOR(NAME) std::vector<double> NAME ## _GLOBAL_
+#define REGISTER_GLOBAL_2D_VECTOR(NAME) std::vector<std::vector<double> > NAME ## _GLOBAL_
+
+#define INITIALIZE_GLOBAL_1D_VECTOR(NAME, N_COLUMNS) {NAME ## _GLOBAL_[i].resize(N_COLUMNS, 0);}
+#define INITIALIZE_GLOBAL_2D_VECTOR(NAME, N_ROWS, N_COLUMNS) {NAME ## _GLOBAL_.resize(N_ROWS, std::vector<double>(N_COLUMNS, 0));}
+
+#define GET_GLOBAL_VECTOR(NAME) NAME ## _GLOBAL_
+
 class Updater {
 protected:
     // Keep a reference of the model and datapoints.
@@ -96,43 +115,6 @@ protected:
 	    }
 	}
     }
-
-    void RegisterGlobal2dVector(std::string name, int n_rows, int n_columns) {
-	global_2d_vectors[name].resize(n_rows, std::vector<double>(n_columns, 0));
-    }
-
-    void RegisterGlobal1dVector(std::string name, int n_cols) {
-	global_1d_vectors[name].resize(n_cols, 0);
-    }
-
-    std::vector<std::vector<double> > & GetGlobal2dVector(std::string name) {
-	return global_2d_vectors[name];
-    }
-
-    std::vector<double> & GetGlobal1dVector(std::string name) {
-	return global_1d_vectors[name];
-    }
-
-    void RegisterThreadLocal2dVector(std::string name, int n_rows, int n_columns) {
-	for (int i = 0; i < FLAGS_n_threads; i++) {
-	    thread_local_2d_vectors[i][name].resize(n_rows, std::vector<double>(n_columns, 0));
-	}
-    }
-
-    void RegisterThreadLocal1dVector(std::string name, int n_columns) {
-	for (int i = 0; i < FLAGS_n_threads; i++) {
-	    thread_local_1d_vectors[i][name].resize(n_columns, 0);
-	}
-    }
-
-    std::vector<std::vector<double> > & GetThreadLocal2dVector(std::string name) {
-	return thread_local_2d_vectors[omp_get_thread_num()][name];
-    }
-
-    std::vector<double> & GetThreadLocal1dVector(std::string name) {
-	return thread_local_1d_vectors[omp_get_thread_num()][name];
-    }
-
 
 public:
     Updater(Model *model, std::vector<Datapoint *> &datapoints) {
