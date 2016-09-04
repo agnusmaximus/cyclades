@@ -18,7 +18,7 @@
 #define REGISTER_GLOBAL_1D_VECTOR(NAME) std::vector<double> NAME ## _GLOBAL_
 #define REGISTER_GLOBAL_2D_VECTOR(NAME) std::vector<std::vector<double> > NAME ## _GLOBAL_
 
-#define INITIALIZE_GLOBAL_1D_VECTOR(NAME, N_COLUMNS) {NAME ## _GLOBAL_[i].resize(N_COLUMNS, 0);}
+#define INITIALIZE_GLOBAL_1D_VECTOR(NAME, N_COLUMNS) {NAME ## _GLOBAL_.resize(N_COLUMNS, 0);}
 #define INITIALIZE_GLOBAL_2D_VECTOR(NAME, N_ROWS, N_COLUMNS) {NAME ## _GLOBAL_.resize(N_ROWS, std::vector<double>(N_COLUMNS, 0));}
 
 #define GET_GLOBAL_VECTOR(NAME) NAME ## _GLOBAL_
@@ -97,7 +97,6 @@ protected:
 	std::vector<double> &model_data = model->ModelData();
 #pragma omp parallel num_threads(FLAGS_n_threads)
 	{
-	    Gradient *g = &thread_gradients[omp_get_thread_num()];
 	    PrepareNu(all_coordinates);
 	    PrepareMu(all_coordinates);
 #pragma omp for

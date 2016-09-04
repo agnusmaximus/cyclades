@@ -7,11 +7,17 @@
 class SVRGUpdater : public Updater {
 protected:
     std::vector<double> model_copy;
+    // Vectors for computing SVRG related data.
     REGISTER_THREAD_LOCAL_1D_VECTOR(lambda);
     REGISTER_THREAD_LOCAL_2D_VECTOR(h_x);
     REGISTER_THREAD_LOCAL_2D_VECTOR(h_y);
-    REGISTER_GLOBAL_2D_VECTOR(g);
-    REGISTER_THREAD_LOCAL_2D_VECTOR(kappa);
+    REGISTER_GLOBAL_1D_VECTOR(g);
+
+    // Vectors for computing the sum of gradients (g).
+    REGISTER_THREAD_LOCAL_2D_VECTOR(g_nu);
+    REGISTER_THREAD_LOCAL_1D_VECTOR(g_mu);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(g_h);
+    REGISTER_GLOBAL_1D_VECTOR(g_bookkeeping);
 
     void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
@@ -50,7 +56,7 @@ protected:
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
-	return FLAGS_learning_rate * (GET_GLOBAL_VECTOR(g)[coordinate][index_into_coordinate_vector] -
+	return FLAGS_learning_rate * (GET_GLOBAL_VECTOR(g)[coordinate*model->CoordinateSize()+index_into_coordinate_vector] -
 				      GET_THREAD_LOCAL_VECTOR(lambda)[coordinate] * model_copy[coordinate*model->CoordinateSize()+index_into_coordinate_vector]);
     }
 
@@ -60,12 +66,15 @@ protected:
 
  public:
  SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	INITIALIZE_GLOBAL_2D_VECTOR(g, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_GLOBAL_1D_VECTOR(g, model->NumParameters() * model->CoordinateSize());
 	INITIALIZE_THREAD_LOCAL_1D_VECTOR(lambda, model->NumParameters());
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_x, model->NumParameters(), model->CoordinateSize());
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_y, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(kappa, model->NumParameters(), model->CoordinateSize());
 	model_copy.resize(model->ModelData().size());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_nu, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_mu, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_GLOBAL_1D_VECTOR(g_bookkeeping, model->NumParameters());
     }
 
     ~SVRGUpdater() {
@@ -77,8 +86,21 @@ protected:
 	// Make a copy of the model every epoch.
 	model_copy = model->ModelData();
 
+	// Clear the sum of gradients.
+	std::vector<double> &g = GET_GLOBAL_VECTOR(g);
+	std::fill(g.begin(), g.end(), 0);
+
+	// Compute average sum of gradients on the model copy.
+	// Essentially perform SGD on it.
+	std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
+	std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
+	std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
+	std::vector<double> &g_bookkeeping = GET_GLOBAL_VECTOR(g_bookkeeping);
+	std::fill(g_bookkeeping.begin(), g_bookkeeping.end(), 0);
+	int coord_size = model->CoordinateSize();
+
 	// Compute average sum of gradients of the model_copy.
-	Gradient *grad = &thread_gradients[omp_get_thread_num()];
+	/*Gradient *grad = &thread_gradients[omp_get_thread_num()];
 	std::vector<std::vector<double> > &g = GET_GLOBAL_VECTOR(g);
 	for (auto & v : g)
 	    std::fill(v.begin(), v.end(), 0);
@@ -115,7 +137,7 @@ protected:
 		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] + nu[i][j] - h[i][j]) / datapoints.size();
 		}
 	    }
-	}
+	    }*/
     }
 };
 
