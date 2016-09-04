@@ -114,13 +114,13 @@ protected:
     }
 
     void RegisterThreadLocal2dVector(std::string name, int n_rows, int n_columns) {
-	for (int i = 0; i <FLAGS_n_threads; i++) {
+	for (int i = 0; i < FLAGS_n_threads; i++) {
 	    thread_local_2d_vectors[i][name].resize(n_rows, std::vector<double>(n_columns, 0));
 	}
     }
 
     void RegisterThreadLocal1dVector(std::string name, int n_columns) {
-	for (int i = 0; i <FLAGS_n_threads; i++) {
+	for (int i = 0; i < FLAGS_n_threads; i++) {
 	    thread_local_1d_vectors[i][name].resize(n_columns, 0);
 	}
     }
@@ -168,6 +168,7 @@ public:
     virtual void Update(Model *model, Datapoint *datapoint) {
 	int thread_num = omp_get_thread_num();
 	thread_gradients[thread_num].Clear();
+	thread_gradients[thread_num].datapoint = datapoint;
 
 	// First prepare Nu and Mu for catchup since they are independent of the the model.
 	PrepareNu(datapoint->GetCoordinates());
