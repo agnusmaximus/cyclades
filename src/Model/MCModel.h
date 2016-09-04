@@ -92,7 +92,7 @@ class MCModel : public Model {
 	double label = labels[0];
 	double coeff = 0;
 	for (int i = 0; i < rlength; i++) {
-	    coeff += model[user_coordinate*rlength+i] * model[movie_coordinate*rlength+i];
+	    coeff += local_model[user_coordinate*rlength+i] * local_model[movie_coordinate*rlength+i];
 	}
 	coeff -= label;
 	g->coeffs[0] = coeff;
@@ -113,7 +113,7 @@ class MCModel : public Model {
 	else
 	    other_coordinate = g->datapoint->GetCoordinates()[0];
 	for (int i = 0; i < rlength; i++) {
-	    out[i] = -g->coeffs[0] * model[other_coordinate * rlength + i];
+	    out[i] = -g->coeffs[0] * local_model[other_coordinate * rlength + i];
 	}
     }
 };

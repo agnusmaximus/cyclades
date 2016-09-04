@@ -100,7 +100,7 @@ class LSModel : public Model {
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    double weight = datapoint->GetWeights()[i];
-	    cp += weight * model[index];
+	    cp += weight * local_model[index];
 	}
 	double partial_grad = 2 * (cp - B[row]);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {

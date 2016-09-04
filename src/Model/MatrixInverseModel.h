@@ -186,7 +186,7 @@ public:
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	double product = 0;
 	for (int i = 0; i < coordinates.size(); i++) {
-	    product += model[coordinates[i]] * weights[i];
+	    product += local_model[coordinates[i]] * weights[i];
 	}
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];

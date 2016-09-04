@@ -119,8 +119,8 @@ class WordEmbeddingsModel : public Model {
 	double weight = labels[0];
 	double norm = 0;
 	for (int i = 0; i < w2v_length; i++) {
-	    norm += (model[coord1*w2v_length+i] + model[coord2*w2v_length+i]) *
-		(model[coord1*w2v_length+i] + model[coord2*w2v_length+i]);
+	    norm += (local_model[coord1*w2v_length+i] + local_model[coord2*w2v_length+i]) *
+		(local_model[coord1*w2v_length+i] + local_model[coord2*w2v_length+i]);
 	}
 	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
 
@@ -142,7 +142,7 @@ class WordEmbeddingsModel : public Model {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
 	for (int i = 0; i < w2v_length; i++) {
-	    out[i] = (2 * g->coeffs[0] * (model[c1*w2v_length+i] + model[c2*w2v_length+i]));
+	    out[i] = (2 * g->coeffs[0] * (local_model[c1*w2v_length+i] + local_model[c2*w2v_length+i]));
 	}
     }
 };
