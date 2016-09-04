@@ -111,7 +111,6 @@ protected:
 		}
 	    }
 	}
-	std::cout << g[30][0] << " " << g[42][0] << std::endl;
     }
 };
 
