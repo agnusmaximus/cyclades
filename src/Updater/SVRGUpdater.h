@@ -22,6 +22,7 @@ protected:
 	std::vector<std::vector<double> > &h_y = GetThreadLocal2dVector("h_y");
 	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
 
+
 	g->datapoint = datapoint;
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	int coord_size = model->CoordinateSize();
@@ -110,6 +111,7 @@ protected:
 		}
 	    }
 	}
+	std::cout << g[30][0] << " " << g[42][0] << std::endl;
     }
 };
 
