@@ -165,14 +165,6 @@ public:
 	    loss += first / 2 - second / (double)n_coords;
 	}
 
-	double d = 0, mm = 0, m_i = 0;
-	for (int i = 0; i < n_coords; i++) {
-	    d += model[i];
-	    if (model[i] > mm) {
-		mm = fmax(mm, model[i]);
-		m_i = i;
-	    }
-	}
 	return loss + 2;
     }
 
