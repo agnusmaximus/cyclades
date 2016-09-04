@@ -53,7 +53,7 @@ protected:
 	    double geom_sum = 0;
 	    double mu = Mu(index, g);
 	    if (mu != 0) {
-		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
+ 		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
 	    }
 	    for (int j = 0; j < coordinate_size; j++) {
 		model_data[index * coordinate_size + j] =
@@ -70,8 +70,7 @@ protected:
 	{
 	    Gradient *g = &thread_gradients[omp_get_thread_num()];
 	    ComputeAllNuAndMu(g);
-	    std::vector<double> nu(coordinate_size);
-#pragma omp for
+	    #pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
 		double geom_sum = 0, mu = Mu(i, g);
@@ -155,6 +154,7 @@ public:
 	thread_gradients[thread_num].Clear();
 	ComputeGradient(datapoint, &thread_gradients[thread_num]);
         CatchUp(datapoint, &thread_gradients[thread_num], datapoint->GetOrder(), bookkeeping);
+	ComputeGradient(datapoint, &thread_gradients[thread_num]);
 	ApplyGradient(datapoint, &thread_gradients[thread_num]);
 	for (const auto &coordinate : datapoint->GetCoordinates()) {
 	    bookkeeping[coordinate] = datapoint->GetOrder();

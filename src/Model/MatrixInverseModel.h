@@ -1,6 +1,7 @@
 #ifndef _MATRIXINVERSEMODEL_
 #define _MATRIXINVERSEMODEL_
 
+#include <iomanip>
 #include <sstream>
 #include "Model.h"
 
@@ -163,6 +164,16 @@ public:
 	    first -= ai_t_x * ai_t_x;
 	    loss += first / 2 - second / (double)n_coords;
 	}
+
+	double d = 0, mm = 0, m_i = 0;
+	for (int i = 0; i < n_coords; i++) {
+	    d += model[i];
+	    if (model[i] > mm) {
+		mm = fmax(mm, model[i]);
+		m_i = i;
+	    }
+	}
+	std::cout << d << " " << mm << " " << m_i  << std::endl;
 	return loss + 2;
     }
 
@@ -193,11 +204,11 @@ public:
     }
 
     void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
-	out = lambda / n_coords;
+	out = lambda / (double)n_coords;
     }
 
     void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
-	out[0] = B[coordinate]/n_coords;
+	out[0] = -B[coordinate] / (double)n_coords;
     }
 
     void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {

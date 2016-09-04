@@ -34,7 +34,7 @@ protected:
     }
 
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return -FLAGS_learning_rate * GetThreadLocal2dVector("h")[coordinate][index_into_coordinate_vector];
+	return GetThreadLocal2dVector("h")[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {

@@ -39,8 +39,8 @@ protected:
     }
 
     double H(int coordinate, int index_into_coordinate_vector, Gradient *g) {
-	return -FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
-				       GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
+	return FLAGS_learning_rate * (GetThreadLocal2dVector("h_x")[coordinate][index_into_coordinate_vector] -
+				      GetThreadLocal2dVector("h_y")[coordinate][index_into_coordinate_vector]);
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector, Gradient *g) {
@@ -107,7 +107,7 @@ protected:
 	    // Calc the gradients.
 	    for (int i = 0; i < n_coords; i++) {
 		for (int j = 0; j < coordinate_size; j++) {
-		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] - nu[i][j] - h[i][j]) / datapoints.size();
+		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] + nu[i][j] - h[i][j]) / datapoints.size();
 		}
 	    }
 	}

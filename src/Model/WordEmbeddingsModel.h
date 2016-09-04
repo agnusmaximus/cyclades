@@ -142,7 +142,7 @@ class WordEmbeddingsModel : public Model {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
 	for (int i = 0; i < w2v_length; i++) {
-	    out[i] = -1 * (2 * g->coeffs[0] * (model[c1*w2v_length+i] + model[c2*w2v_length+i]));
+	    out[i] = (2 * g->coeffs[0] * (model[c1*w2v_length+i] + model[c2*w2v_length+i]));
 	}
     }
 };
