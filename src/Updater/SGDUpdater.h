@@ -6,29 +6,30 @@
 
 class SGDUpdater : public Updater {
 protected:
-    virtual void ComputeAllNuAndMu(Gradient *g) {
+    void PrepareNu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &nu = GetThreadLocal2dVector("nu");
-	std::vector<double> &mu = GetThreadLocal1dVector("mu");
-	for (int i = 0; i < model->NumParameters(); i++) {
-	    model->Mu(i, mu[i], cur_model);
-	    model->Nu(i, nu[i], cur_model);
+	for (int i = 0; i < coordinates.size(); i++) {
+	    int index = coordinates[i];
+	    model->Nu(index, nu[index], cur_model);
 	}
     }
 
-    virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) {
+    void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &nu = GetThreadLocal2dVector("nu");
-	std::vector<std::vector<double> > &h = GetThreadLocal2dVector("h");
 	std::vector<double> &mu = GetThreadLocal1dVector("mu");
+	for (int i = 0; i < coordinates.size(); i++) {
+	    int index = coordinates[i];
+	    model->Mu(index, mu[index], cur_model);
+	}
+    }
 
-	g->datapoint = datapoint;
+    void PrepareH(Datapoint *datapoint, Gradient *g) override {
+	std::vector<double> &cur_model = model->ModelData();
+	std::vector<std::vector<double> > &h = GetThreadLocal2dVector("h");
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
-	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->Mu(index, mu[index], cur_model);
-	    model->Nu(index, nu[index], cur_model);
 	    model->H(index, h[index], g, cur_model);
 	}
     }
@@ -46,7 +47,7 @@ protected:
     }
 
  public:
-    SGDUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
+    SGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
 	RegisterThreadLocal1dVector("mu", model->NumParameters());
 	RegisterThreadLocal2dVector("nu", model->NumParameters(), model->CoordinateSize());
 	RegisterThreadLocal2dVector("h", model->NumParameters(), model->CoordinateSize());

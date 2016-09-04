@@ -6,11 +6,17 @@
 
 class Updater {
 protected:
+    // Keep a reference of the model and datapoints.
     Model *model;
-    Gradient *thread_gradients;
     std::vector<Datapoint *> datapoints;
-    int n_threads;
+
+    // Have an array of Gradient objects (stores extra info for Model processing).
+    // Have 1 per thread to avoid conflicts.
+    Gradient *thread_gradients;
     std::vector<int> bookkeeping;
+
+    // A reference to all_coordinates, which indexes all the coordinates of the model.
+    std::vector<int> all_coordinates;
 
     // The following datastructures are used to store extra 1d/2d vectors
     // on the fly, which may be needed by a subclass.
@@ -26,12 +32,13 @@ protected:
     virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
     virtual double Mu(int coordinate) = 0;
 
-    // Expect that calls to Nu, Mu, and H are ready for all coordinates touched by datapoint.
-    virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) = 0;
-    // Expect that calls to Nu and Mu are ready for all coordinates.
-    virtual void ComputeAllNuAndMu(Gradient *g) = 0;
+    // After calling PrepareNu/Mu/H, for the given coordinates, we expect that
+    // calls to Nu/Mu/H are ready.
+    virtual void PrepareNu(std::vector<int> &coordinates) = 0;
+    virtual void PrepareMu(std::vector<int> &coordinates) = 0;
+    virtual void PrepareH(Datapoint *datapoint, Gradient *g) = 0;
 
-    virtual void ApplyGradient(Datapoint *datapoint, Gradient *g) {
+    virtual void ApplyGradient(Datapoint *datapoint) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
@@ -45,13 +52,13 @@ protected:
 	}
     }
 
-    void CatchUp(Datapoint *datapoint, Gradient *g, int order, std::vector<int> &bookkeeping) {
+    void CatchUp(Datapoint *datapoint) {
 	// Optimize by quick returning if nu and mu are zero.
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    int diff = order - bookkeeping[index] - 1;
+	    int diff = datapoint->GetOrder() - bookkeeping[index] - 1;
 	    if (diff < 0) diff = 0;
 	    double geom_sum = 0;
 	    double mu = Mu(index);
@@ -66,14 +73,15 @@ protected:
 	}
     }
 
-    void FinalCatchUp(std::vector<int> &bookkeeping) {
+    void FinalCatchUp() {
 	int coordinate_size = model->CoordinateSize();
 	std::vector<double> &model_data = model->ModelData();
 #pragma omp parallel num_threads(FLAGS_n_threads)
 	{
 	    Gradient *g = &thread_gradients[omp_get_thread_num()];
-	    ComputeAllNuAndMu(g);
-	    #pragma omp for
+	    PrepareNu(all_coordinates);
+	    PrepareMu(all_coordinates);
+#pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
 		double geom_sum = 0, mu = Mu(i);
@@ -127,24 +135,28 @@ protected:
 
 
 public:
-    Updater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) {
+    Updater(Model *model, std::vector<Datapoint *> &datapoints) {
 	// Create gradients for each thread.
-	thread_gradients = new Gradient[n_threads];
-	this->n_threads = n_threads;
-	for (int thread = 0; thread < n_threads; thread++) {
+	thread_gradients = new Gradient[FLAGS_n_threads];
+	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
 	    thread_gradients[thread] = Gradient();
 	    thread_gradients[thread].SetUp(model);
 	}
 	this->model = model;
 
 	// Create thread local vectors for each thread.
-	thread_local_2d_vectors.resize(n_threads);
-	thread_local_1d_vectors.resize(n_threads);
+	thread_local_2d_vectors.resize(FLAGS_n_threads);
+	thread_local_1d_vectors.resize(FLAGS_n_threads);
 
 	// Set up bookkeping.
 	this->datapoints = datapoints;
 	for (int i = 0; i < model->NumParameters(); i++) {
 	    bookkeeping.push_back(0);
+	}
+
+	// Keep an array that has integers 1...n_coords.
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    all_coordinates.push_back(i);
 	}
     }
     Updater() {}
@@ -152,13 +164,21 @@ public:
 	delete [] thread_gradients;
     }
 
-    // Main update method.
-    virtual void Update(Model *model, Datapoint *datapoint, int thread_num) {
+    // Main update method, which is run by multiple threads.
+    virtual void Update(Model *model, Datapoint *datapoint) {
+	int thread_num = omp_get_thread_num();
 	thread_gradients[thread_num].Clear();
-	ComputeGradient(datapoint, &thread_gradients[thread_num]);
-        CatchUp(datapoint, &thread_gradients[thread_num], datapoint->GetOrder(), bookkeeping);
-	ComputeGradient(datapoint, &thread_gradients[thread_num]);
-	ApplyGradient(datapoint, &thread_gradients[thread_num]);
+
+	// First prepare Nu and Mu for catchup since they are independent of the the model.
+	PrepareNu(datapoint->GetCoordinates());
+	PrepareMu(datapoint->GetCoordinates());
+        CatchUp(datapoint);
+
+	// After catching up, prepare H and apply the gradient.
+	PrepareH(datapoint, &thread_gradients[thread_num]);
+	ApplyGradient(datapoint);
+
+	// Update bookkeeping.
 	for (const auto &coordinate : datapoint->GetCoordinates()) {
 	    bookkeeping[coordinate] = datapoint->GetOrder();
 	}
@@ -171,7 +191,7 @@ public:
 
     // Called when the epoch ends.
     virtual void EpochFinish() {
-	FinalCatchUp(bookkeeping);
+	FinalCatchUp();
 	std::fill(bookkeeping.begin(), bookkeeping.end(), 0);
 	model->EpochFinish();
     }

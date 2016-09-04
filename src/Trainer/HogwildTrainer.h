@@ -56,7 +56,7 @@ public:
 		int batch = 0; // Hogwild only has 1 batch.
 		for (int index_count = 0; index_count < partitions.NumDatapointsInBatch(thread, batch); index_count++) {
 		    int index = per_batch_datapoint_order[thread][batch][index_count];
-		    updater->Update(model, partitions.GetDatapoint(thread, batch, index), thread);
+		    updater->Update(model, partitions.GetDatapoint(thread, batch, index));
 		}
 	    }
 	    updater->EpochFinish();

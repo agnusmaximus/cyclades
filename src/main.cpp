@@ -15,10 +15,10 @@ TrainStatistics RunOnce() {
     // Create updater.
     Updater *updater = NULL;
     if (FLAGS_sgd) {
-	updater = new SGDUpdater(model, datapoints, FLAGS_n_threads);
+	updater = new SGDUpdater(model, datapoints);
     }
     else if (FLAGS_svrg) {
-	updater = new SVRGUpdater(model, datapoints, FLAGS_n_threads);
+	updater = new SVRGUpdater(model, datapoints);
     }
     if (!updater) {
 	std::cerr << "Main: updater class not chosen." << std::endl;

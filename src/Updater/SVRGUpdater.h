@@ -8,27 +8,28 @@ class SVRGUpdater : public Updater {
 protected:
     std::vector<double> model_copy;
 
-    virtual void ComputeAllNuAndMu(Gradient *g) {
+    void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
-	for (int i = 0; i < model->NumParameters(); i++) {
-	    model->Mu(i, lambda[i], cur_model);
+	for (int i = 0; i < coordinates.size(); i++) {
+	    int index = coordinates[i];
+	    model->Mu(index, lambda[index], cur_model);
 	}
     }
 
-    virtual void ComputeGradient(Datapoint *datapoint, Gradient *g) {
+    void PrepareNu(std::vector<int> &coordinates) override {
+    }
+
+    void PrepareH(Datapoint *datapoint, Gradient *g) override {
 	std::vector<double> &cur_model = model->ModelData();
 	std::vector<std::vector<double> > &h_x = GetThreadLocal2dVector("h_x");
 	std::vector<std::vector<double> > &h_y = GetThreadLocal2dVector("h_y");
-	std::vector<double> &lambda = GetThreadLocal1dVector("lambda");
-
 
 	g->datapoint = datapoint;
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->Mu(index, lambda[index], cur_model);
 	    model->H(index, h_x[index], g, cur_model);
 	}
 	model->PrecomputeCoefficients(datapoint, g, model_copy);
@@ -53,7 +54,7 @@ protected:
     }
 
  public:
- SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints, int n_threads) : Updater(model, datapoints, n_threads) {
+ SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
 	RegisterGlobal2dVector("g", model->NumParameters(), model->CoordinateSize());
 	RegisterThreadLocal1dVector("lambda", model->NumParameters());
 	RegisterThreadLocal2dVector("h_x", model->NumParameters(), model->CoordinateSize());
