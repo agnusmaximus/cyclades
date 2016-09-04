@@ -91,25 +91,24 @@ protected:
 	    for (auto & v : nu)
 		std::fill(v.begin(), v.end(), 0);
 	    std::fill(mu.begin(), mu.end(), 0);
+	    std::fill(grad->coeffs.begin(), grad->coeffs.end(), 0);
 
 	    model->PrecomputeCoefficients(datapoint, grad, model->ModelData());
 
 	    // Compute the origial sgd gradients needed in order to sum them.
-	    for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
-		int index = datapoint->GetCoordinates()[i];
-		model->Mu(index, mu[index], model->ModelData());
-		model->Nu(index, nu[index], model->ModelData());
-		model->H(index, h[index], grad, model->ModelData());
+	    //for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
+	    for (int i = 0; i < n_coords; i++) {
+		model->Mu(i, mu[i], model->ModelData());
+		model->Nu(i, nu[i], model->ModelData());
+		model->H(i, h[i], grad, model->ModelData());
 	    }
 
 	    // Calc the gradients.
 	    for (int i = 0; i < n_coords; i++) {
 		for (int j = 0; j < coordinate_size; j++) {
-		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] + nu[i][j] + h[i][j]) / datapoints.size();
+		    g[i][j] += (mu[i] * model_copy[i*coordinate_size+j] - nu[i][j] - h[i][j]) / datapoints.size();
 		}
 	    }
-
-	    // Sum the gradients now
 	}
     }
 };
