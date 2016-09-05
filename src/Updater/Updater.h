@@ -25,9 +25,10 @@
 
 class Updater {
 protected:
-    // Keep a reference of the model and datapoints.
+    // Keep a reference of the model and datapoints, and partition ordering.
     Model *model;
     std::vector<Datapoint *> datapoints;
+    DatapointPartitions *datapoint_partitions;
 
     // Have an array of Gradient objects (stores extra info for Model processing).
     // Have 1 per thread to avoid conflicts.
@@ -140,9 +141,15 @@ public:
 	    all_coordinates.push_back(i);
 	}
     }
+
     Updater() {}
     virtual ~Updater() {
 	delete [] thread_gradients;
+    }
+
+    // Could be useful to get partitioning info.
+    virtual void SetUpWithPartitions(DatapointPartitions &partitions) {
+	datapoint_partitions = &partitions;
     }
 
     // Main update method, which is run by multiple threads.

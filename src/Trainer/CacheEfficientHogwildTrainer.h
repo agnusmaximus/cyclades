@@ -16,6 +16,7 @@ public:
 	}
 
 	model->SetUpWithPartitions(partitions);
+	updater->SetUpWithPartitions(partitions);
 
 	TrainStatistics stats;
 

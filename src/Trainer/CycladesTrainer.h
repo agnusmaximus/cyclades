@@ -3,27 +3,6 @@
 
 class CycladesTrainer : public Trainer {
 private:
-    int *thread_batch;
-
-    // A parallel method where each thread waits
-    // until all other threads are on the same batch.
-    void WaitForThreadsTilBatch(int thread, int batch) {
-	thread_batch[thread] = batch;
-	bool waiting_for_threads = true;
-	while (waiting_for_threads) {
-	    waiting_for_threads = false;
-	    for (int t = 0; t < FLAGS_n_threads; t++) {
-		if (thread_batch[t] < batch) {
-		    waiting_for_threads = true;
-		    break;
-		}
-	    }
-	}
-    }
-
-    void ClearThreadBatchIndices() {
-	memset(thread_batch, 0, sizeof(int) * FLAGS_n_threads);
-    }
 
     void DebugPrintPartitions(DatapointPartitions &p) {
 	for (int i = 0; i < p.NumBatches(); i++) {
@@ -41,11 +20,9 @@ private:
 
 public:
     CycladesTrainer() {
-	thread_batch = new int[FLAGS_n_threads];
-	memset(thread_batch, 0, sizeof(int) * FLAGS_n_threads);
     }
+
     ~CycladesTrainer() {
-	delete [] thread_batch;
     }
 
     TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
@@ -58,6 +35,7 @@ public:
 	}
 
 	model->SetUpWithPartitions(partitions);
+	updater->SetUpWithPartitions(partitions);
 
 	// Default batch ordering.
 	std::vector<int> batch_ordering(partitions.NumBatches());
@@ -107,19 +85,20 @@ public:
 
 	    updater->EpochBegin();
 
-#pragma omp parallel for schedule(static, 1)
-	    for (int thread = 0; thread < FLAGS_n_threads; thread++) {
+#pragma omp parallel num_threads(FLAGS_n_threads)
+	    {
+		int thread = omp_get_thread_num();
 		for (int batch_count = 0; batch_count < partitions.NumBatches(); batch_count++) {
 		    int batch = batch_ordering[batch_count];
-		    WaitForThreadsTilBatch(thread, batch_count);
+#pragma omp barrier
 		    for (int index_count = 0; index_count < partitions.NumDatapointsInBatch(thread, batch); index_count++) {
 			int index = per_batch_datapoint_order[thread][batch][index_count];
 			updater->Update(model, partitions.GetDatapoint(thread, batch, index));
 		    }
 		}
 	    }
+
 	    updater->EpochFinish();
-	    ClearThreadBatchIndices();
 	}
 	return stats;
     }
