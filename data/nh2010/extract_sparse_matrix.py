@@ -15,7 +15,7 @@ for line in f:
     if line[0] == "%":
         continue
     weight = 1
-    values = [int(x) for x in line.strip().split()]
+    values = [float(x) for x in line.strip().split()]
     if len(values) == 3:
         c1, c2, weight = values
     else:

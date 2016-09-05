@@ -37,8 +37,6 @@ public:
 	Timer gradient_timer;
 	for (int epoch = 0; epoch < FLAGS_n_epochs; epoch++) {
 
-	    this->EpochBegin(epoch, gradient_timer, model, datapoints, &stats);
-
 	    // Random per batch datapoint processing.
 	    if (FLAGS_random_per_batch_datapoint_processing) {
 		for (int thread = 0; thread < FLAGS_n_threads; thread++) {
@@ -57,6 +55,7 @@ public:
 		for (int index_count = 0; index_count < partitions.NumDatapointsInBatch(thread, batch); index_count++) {
 		    int index = per_batch_datapoint_order[thread][batch][index_count];
 		    updater->Update(model, partitions.GetDatapoint(thread, batch, index));
+		    this->EpochBegin(epoch, gradient_timer, model, datapoints, &stats);
 		}
 	    }
 	    updater->EpochFinish();

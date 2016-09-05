@@ -28,8 +28,8 @@ protected:
 	printf("Partition Time(s): %f\n", timer.Elapsed());
     }
 
-    void PrintTimeLoss(double cur_time, double cur_loss) {
-	printf("Time(s): %f\tLoss: %lf\n", cur_time, cur_loss);
+    void PrintTimeLoss(double cur_time, double cur_loss, int epoch) {
+	printf("Time(s): %f\tLoss: %lf\tEpoch: %d\n", cur_time, cur_loss, epoch);
     }
 
     void EpochBegin(int epoch, Timer &gradient_timer, Model *model, const std::vector<Datapoint *> &datapoints, TrainStatistics *stats) {
@@ -37,7 +37,7 @@ protected:
 	double cur_loss = model->ComputeLoss(datapoints);
 	this->TrackTimeLoss(cur_time, cur_loss, stats);
 	if (FLAGS_print_loss_per_epoch && epoch % FLAGS_interval_print == 0) {
-	    this->PrintTimeLoss(cur_time, cur_loss);
+	    this->PrintTimeLoss(cur_time, cur_loss, epoch);
 	}
     }
 
