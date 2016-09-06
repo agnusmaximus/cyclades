@@ -24,7 +24,7 @@ if (OPENMP_FOUND)
 endif()
 
 # gflags
-find_package(gflags REQUIRED)
+add_subdirectory(gflags)
 
 add_executable(cyclades src/main.cpp)
 target_link_libraries(cyclades gflags)
