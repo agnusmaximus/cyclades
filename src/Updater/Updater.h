@@ -73,7 +73,6 @@ protected:
     }
 
     void CatchUp(Datapoint *datapoint) {
-	// Optimize by quick returning if nu and mu are zero.
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
@@ -89,6 +88,25 @@ protected:
 		model_data[index * coordinate_size + j] =
 		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
 		    - Nu(index, j) * geom_sum;
+	    }
+	}
+    }
+
+    virtual void CatchEveryoneUp(int cur_order) {
+	int coordinate_size = model->CoordinateSize();
+	std::vector<double> &model_data = model->ModelData();
+	PrepareNu(all_coordinates);
+	PrepareMu(all_coordinates);
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    int diff = cur_order - bookkeeping[i] - 1;
+	    double geom_sum = 0, mu = Mu(i);
+	    if (mu != 0) {
+		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
+	    }
+	    for (int j = 0; j < coordinate_size; j++) {
+		    model_data[i * coordinate_size + j] =
+			pow(1 - mu, diff) * model_data[i * coordinate_size + j]
+			- Nu(i, j) * geom_sum;
 	    }
 	}
     }

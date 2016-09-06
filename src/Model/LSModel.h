@@ -53,7 +53,7 @@ class LSModel : public Model {
 	// Initialize B by multiplying the input matrix with a random vector.
 	std::vector<double> rand_vect(n_coords);
 	for (int i = 0; i < n_coords; i++) {
-	    rand_vect[i] = rand() % FLAGS_random_range;
+	    rand_vect[i] = (rand() % FLAGS_random_range);
 	}
 
 	MatrixVectorMultiply(datapoints, rand_vect, B);

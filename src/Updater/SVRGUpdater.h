@@ -6,6 +6,8 @@
 
 class SVRGUpdater : public Updater {
 protected:
+    double n_updates_so_far;
+
     std::vector<double> model_copy;
     // Vectors for computing SVRG related data.
     REGISTER_THREAD_LOCAL_1D_VECTOR(lambda);
@@ -52,7 +54,7 @@ protected:
 
     double H(int coordinate, int index_into_coordinate_vector) {
 	return FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h_x)[coordinate][index_into_coordinate_vector] -
-				      GET_THREAD_LOCAL_VECTOR(h_y)[coordinate][index_into_coordinate_vector]);
+							  GET_THREAD_LOCAL_VECTOR(h_y)[coordinate][index_into_coordinate_vector]);
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
@@ -64,37 +66,7 @@ protected:
 	return GET_THREAD_LOCAL_VECTOR(lambda)[coordinate] * FLAGS_learning_rate;
     }
 
- public:
- SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	INITIALIZE_GLOBAL_1D_VECTOR(g, model->NumParameters() * model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_1D_VECTOR(lambda, model->NumParameters());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_x, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_y, model->NumParameters(), model->CoordinateSize());
-	model_copy.resize(model->ModelData().size());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_nu, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_mu, model->NumParameters());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h, model->NumParameters(), model->CoordinateSize());
-
-	// Compute number of zeroes for each column (parameters) of the model.
-	INITIALIZE_GLOBAL_1D_VECTOR(n_zeroes, model->NumParameters());
-	std::vector<double> &n_zeroes = GET_GLOBAL_VECTOR(n_zeroes);
-	for (int i = 0; i < model->NumParameters(); i++) {
-	    n_zeroes[i] = datapoints.size();
-	}
-	int sum = 0;
-	for (int dp = 0; dp < datapoints.size(); dp++) {
-	    for (auto &coordinate : datapoints[dp]->GetCoordinates()) {
-		n_zeroes[coordinate]--;
-		sum++;
-	    }
-	}
-    }
-
-    ~SVRGUpdater() {
-    }
-
-    void EpochBegin() override {
-	Updater::EpochBegin();
+    void ModelCopy() {
 
 	// Make a copy of the model every epoch.
 	model_copy = model->ModelData();
@@ -154,6 +126,44 @@ protected:
 		g[i*coord_size+j] /= datapoints.size();
 	    }
 	}
+    }
+
+ public:
+ SVRGUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
+	INITIALIZE_GLOBAL_1D_VECTOR(g, model->NumParameters() * model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(lambda, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_x, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_y, model->NumParameters(), model->CoordinateSize());
+	model_copy.resize(model->ModelData().size());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_nu, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_mu, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h, model->NumParameters(), model->CoordinateSize());
+
+	// Compute number of zeroes for each column (parameters) of the model.
+	INITIALIZE_GLOBAL_1D_VECTOR(n_zeroes, model->NumParameters());
+	std::vector<double> &n_zeroes = GET_GLOBAL_VECTOR(n_zeroes);
+	for (int i = 0; i < model->NumParameters(); i++) {
+	    n_zeroes[i] = datapoints.size();
+	}
+	int sum = 0;
+	for (int dp = 0; dp < datapoints.size(); dp++) {
+	    for (auto &coordinate : datapoints[dp]->GetCoordinates()) {
+		n_zeroes[coordinate]--;
+		sum++;
+	    }
+	}
+    }
+
+    void Update(Model *model, Datapoint *datapoint) override {
+	Updater::Update(model, datapoint);
+    }
+
+    void EpochBegin() override {
+	Updater::EpochBegin();
+	ModelCopy();
+    }
+
+    ~SVRGUpdater() {
     }
 };
 
