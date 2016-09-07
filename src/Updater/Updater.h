@@ -72,27 +72,31 @@ protected:
 	}
     }
 
-    void CatchUp(Datapoint *datapoint) {
+    virtual void CatchUpSingle(int index, int diff) {
+	if (diff < 0) diff = 0;
+	double geom_sum = 0;
+	double mu = Mu(index);
+	if (mu != 0) {
+	    geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
+	}
+	for (int j = 0; j < model->CoordinateSize(); j++) {
+	    model->ModelData()[index * model->CoordinateSize() + j] =
+		pow(1 - mu, diff) * model->ModelData()[index * model->CoordinateSize() + j]
+		- Nu(index, j) * geom_sum;
+	}
+    }
+
+    virtual void CatchUp(Datapoint *datapoint) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = datapoint->GetOrder() - bookkeeping[index] - 1;
-	    if (diff < 0) diff = 0;
-	    double geom_sum = 0;
-	    double mu = Mu(index);
-	    if (mu != 0) {
- 		geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
-	    }
-	    for (int j = 0; j < coordinate_size; j++) {
-		model_data[index * coordinate_size + j] =
-		    pow(1 - mu, diff) * model_data[index * coordinate_size + j]
-		    - Nu(index, j) * geom_sum;
-	    }
+	    CatchUpSingle(index, diff);
 	}
     }
 
-    void FinalCatchUp() {
+    virtual void FinalCatchUp() {
 	int coordinate_size = model->CoordinateSize();
 	std::vector<double> &model_data = model->ModelData();
 #pragma omp parallel num_threads(FLAGS_n_threads)
@@ -102,15 +106,7 @@ protected:
 #pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
-		double geom_sum = 0, mu = Mu(i);
-		if (mu != 0) {
-		    geom_sum = ((1 - pow(1 - mu, diff+1)) / (1 - (1 - mu))) - 1;
-		}
-		for (int j = 0; j < coordinate_size; j++) {
-		    model_data[i * coordinate_size + j] =
-			pow(1 - mu, diff) * model_data[i * coordinate_size + j]
-			- Nu(i, j) * geom_sum;
-		}
+		CatchUpSingle(i, diff);
 	    }
 	}
     }
