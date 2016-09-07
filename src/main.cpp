@@ -20,6 +20,9 @@ TrainStatistics RunOnce() {
     else if (FLAGS_svrg) {
 	updater = new SVRGUpdater(model, datapoints);
     }
+    else if (FLAGS_saga) {
+	updater = new SAGAUpdater(model, datapoints);
+    }
     if (!updater) {
 	std::cerr << "Main: updater class not chosen." << std::endl;
 	exit(0);
