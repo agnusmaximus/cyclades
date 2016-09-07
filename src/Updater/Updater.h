@@ -23,6 +23,9 @@
 
 #define GET_GLOBAL_VECTOR(NAME) NAME ## _GLOBAL_
 
+#define REGISTER_THREAD_LOCAL_DOUBLE(NAME) std::vector<double > NAME ## _LOCAL_
+#define INITIALIZE_THREAD_LOCAL_DOUBLE(NAME) {NAME##_LOCAL_.resize(FLAGS_n_threads); std::fill(NAME##_LOCAL_.begin(), NAME##_LOCAL_.end(), 0);}
+
 class Updater {
 protected:
     // Keep a reference of the model and datapoints, and partition ordering.
@@ -72,7 +75,7 @@ protected:
 	}
     }
 
-    virtual void CatchUpSingle(int index, int diff) {
+    virtual void CatchUp(int index, int diff) {
 	if (diff < 0) diff = 0;
 	double geom_sum = 0;
 	double mu = Mu(index);
@@ -86,13 +89,13 @@ protected:
 	}
     }
 
-    virtual void CatchUp(Datapoint *datapoint) {
+    virtual void CatchUpDatapoint(Datapoint *datapoint) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
 	    int diff = datapoint->GetOrder() - bookkeeping[index] - 1;
-	    CatchUpSingle(index, diff);
+	    CatchUp(index, diff);
 	}
     }
 
@@ -106,7 +109,7 @@ protected:
 #pragma omp for
 	    for (int i = 0; i < model->NumParameters(); i++) {
 		int diff = model->NumParameters() - bookkeeping[i];
-		CatchUpSingle(i, diff);
+		CatchUp(i, diff);
 	    }
 	}
     }
@@ -156,7 +159,7 @@ public:
 	// First prepare Nu and Mu for catchup since they are independent of the the model.
 	PrepareNu(datapoint->GetCoordinates());
 	PrepareMu(datapoint->GetCoordinates());
-        CatchUp(datapoint);
+        CatchUpDatapoint(datapoint);
 
 	// After catching up, prepare H and apply the gradient.
 	PrepareH(datapoint, &thread_gradients[thread_num]);

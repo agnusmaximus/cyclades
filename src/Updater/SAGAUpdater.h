@@ -9,10 +9,21 @@ class SAGAUpdater: public Updater {
 
     // Data structures for capturing the gradient.
     REGISTER_THREAD_LOCAL_2D_VECTOR(h);
+    REGISTER_THREAD_LOCAL_DOUBLE(datapoint_order);
 
     // SAGA data structures.
     REGISTER_GLOBAL_2D_VECTOR(sum_gradients);
-    REGISTER_GLOBAL_2D_VECTOR(prev_gradients);
+    std::vector<std::map<int, std::vector<double> > > prev_gradients;
+
+    void CatchUp(int index, int diff) override {
+	if (diff < 0) {
+	    diff = 0;
+	}
+	for (int j = 0; j < model->CoordinateSize(); j++) {
+	    model->ModelData()[index*model->CoordinateSize()+j] -=
+		FLAGS_learning_rate*diff*GET_GLOBAL_VECTOR(sum_gradients)[index][j] / datapoints.size();
+	}
+    }
 
     void PrepareNu(std::vector<int> &coordinates) override {
 	// Assuming gradients are sparse, nu should be 0.
@@ -30,10 +41,14 @@ class SAGAUpdater: public Updater {
 	    int index = datapoint->GetCoordinates()[i];
 	    model->H(index, h[index], g, cur_model);
 	}
+	GET_THREAD_LOCAL_VECTOR(datapoint_order) = datapoint->GetOrder()-1;
     }
 
     double H(int coordinate, int index_into_coordinate_vector) override {
-	return 0;
+	int datapoint_order = GET_THREAD_LOCAL_VECTOR(datapoint_order);
+	return FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h)[coordinate][index_into_coordinate_vector]
+				      + prev_gradients[datapoint_order][coordinate][index_into_coordinate_vector]
+				      - GET_GLOBAL_VECTOR(sum_gradients)[coordinate][index_into_coordinate_vector] / datapoints.size());
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) override {
@@ -44,13 +59,35 @@ class SAGAUpdater: public Updater {
 	return 0;
     }
 
+    void Update(Model *model, Datapoint *datapoint) {
+	Updater::Update(model, datapoint);
+
+	// Update prev and sum gradients.
+	int dp_order = datapoint->GetOrder()-1;
+	for (const auto &index : datapoint->GetCoordinates()) {
+	    for (int i = 0; i < model->CoordinateSize(); i++) {
+		GET_GLOBAL_VECTOR(sum_gradients)[index][i] += -GET_THREAD_LOCAL_VECTOR(h)[index][i] - prev_gradients[dp_order][index][i];
+		prev_gradients[dp_order][index][i] = -GET_THREAD_LOCAL_VECTOR(h)[index][i];
+	    }
+	}
+    }
 
  public:
     SAGAUpdater(Model *model, std::vector<Datapoint *>&datapoints): Updater(model, datapoints) {
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h, model->NumParameters(), model->CoordinateSize());
-
 	INITIALIZE_GLOBAL_2D_VECTOR(sum_gradients, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_GLOBAL_2D_VECTOR(prev_gradients, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_DOUBLE(datapoint_order);
+
+	// I hope this problem is sparse enough!
+	prev_gradients.resize(datapoints.size());
+	for (int i = 0; i < datapoints.size(); i++) {
+	    int order = datapoints[i]->GetOrder()-1;
+	    for (const auto &index : datapoints[i]->GetCoordinates()) {
+		prev_gradients[order][index].resize(model->CoordinateSize());
+		std::fill(prev_gradients[order][index].begin(),
+			  prev_gradients[order][index].end(), 0);
+	    }
+	}
     }
 
     ~SAGAUpdater() {}

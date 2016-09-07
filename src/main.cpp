@@ -12,6 +12,12 @@ TrainStatistics RunOnce() {
     DatasetReader::ReadDataset<MODEL_CLASS, DATAPOINT_CLASS>(FLAGS_data_file, datapoints, model);
     model->SetUp(datapoints);
 
+    // Shuffle the datapoints and assign the order.
+    std::random_shuffle(datapoints.begin(), datapoints.end());
+    for (int i = 0; i < datapoints.size(); i++) {
+	datapoints[i]->SetOrder(i+1);
+    }
+
     // Create updater.
     Updater *updater = NULL;
     if (FLAGS_sgd) {
