@@ -23,7 +23,10 @@ make
 ```
 
 # Fetching data
-TODO
+Please run this command to fetch all the data
+```c++
+cd data && sh fetch_all_data.sh && cd ..
+```
 
 # Running
 
@@ -39,5 +42,5 @@ To see a list of flags that can be set, run
 
 A quick example to run after compiling and fetching the data is
 ```c++
-./cyclades   --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cyclades_trainer  -cyclades_batch_size=800 -n_epochs=20 -sgd --data_file="data/movielens/ml-1m/movielens-1m.data"
+./cyclades   --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cyclades_trainer  -cyclades_batch_size=800 -n_epochs=20 -sgd --data_file="data/movielens/ml-1m/movielens_1m.data"
 ```
