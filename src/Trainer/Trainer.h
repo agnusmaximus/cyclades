@@ -45,7 +45,7 @@ protected:
     }
 
     void PrintTimeLoss(double cur_time, double cur_loss, int epoch) {
-	printf("Time(s): %f\tLoss: %lf\tEpoch: %d\n", cur_time, cur_loss, epoch);
+	printf("Epoch: %d Time(s): %f\tLoss: %lf\t\n", epoch, cur_time, cur_loss);
     }
 
     void EpochBegin(int epoch, Timer &gradient_timer, Model *model, const std::vector<Datapoint *> &datapoints, TrainStatistics *stats) {
