@@ -15,7 +15,7 @@ git submodule init && git submodule update
 ```
 After the submodule fetches use cmake to generate a build file
 ```c++
-cmake .
+mkdir build && cmake ..
 ```
 Then make to compile
 ```c++
