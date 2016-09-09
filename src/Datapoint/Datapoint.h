@@ -1,4 +1,3 @@
-
 /*
 * Copyright 2016 [See AUTHORS file for list of authors]
 *
@@ -14,6 +13,7 @@
 *    See the License for the specific language governing permissions and
 *    limitations under the License.
 */
+
 #ifndef _DATAPOINT_
 #define _DATAPOINT_
 

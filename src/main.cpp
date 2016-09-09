@@ -1,4 +1,3 @@
-
 /*
 * Copyright 2016 [See AUTHORS file for list of authors]
 *
@@ -14,6 +13,7 @@
 *    See the License for the specific language governing permissions and
 *    limitations under the License.
 */
+
 // Sample call: ./cyclades -matrix_inverse -n_threads=2  -cyclades_trainer  -cyclades_batch_size=500  -learning_rate=.000001 --print_partition_time -n_epochs=20 -sgd -print_loss_per_epoch --data_file="data/nh2010/nh2010.data"
 
 #include <iostream>
@@ -98,13 +98,13 @@ void TuneLearningRate() {
 	}
     }
     double increment = (best_stepsize * FLAGS_tune_stepfactor - best_stepsize / FLAGS_tune_stepfactor) / FLAGS_tune_stepfactor;
-    for (double cur_stepsize = best_stepsize / FLAGS_tune_stepfactor; cur_stepsize < best_stepsize * FLAGS_tune_stepfactor; cur_stepsize += increment) {
-	FLAGS_learning_rate = cur_stepsize;
+    for (double cur_learning_rate = best_stepsize / FLAGS_tune_stepfactor; cur_learning_rate < best_stepsize * FLAGS_tune_stepfactor; cur_learning_rate += increment) {
+	FLAGS_learning_rate = cur_learning_rate;
 	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
-	std::cout << "Trainer: (learning_rate: " << cur_stepsize << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
+	std::cout << "Trainer: (learning_rate: " << cur_learning_rate << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
 	if (cur_stats.losses[cur_stats.losses.size()-1] < best_score) {
 	    best_score = cur_stats.losses[cur_stats.losses.size()-1];
-	    best_stepsize = cur_stepsize;
+	    best_stepsize = cur_learning_rate;
 	}
     }
     std::cout << "Best stepsize: " << best_stepsize << " Lowest loss: " << best_score << std::endl;

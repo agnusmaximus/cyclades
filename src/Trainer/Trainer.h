@@ -1,4 +1,3 @@
-
 /*
 * Copyright 2016 [See AUTHORS file for list of authors]
 *
