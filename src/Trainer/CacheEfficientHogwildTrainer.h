@@ -14,6 +14,7 @@
 *    See the License for the specific language governing permissions and
 *    limitations under the License.
 */
+
 #ifndef _CACHE_EFFICIENT_HOGWILD_TRAINER_
 #define _CACHE_EFFICIENT_HOGWILD_TRAINER_
 

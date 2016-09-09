@@ -104,14 +104,12 @@ DEFINE_bool(dense_least_squares, false, "Dense least squares application type.")
 DEFINE_bool(word_embeddings, false, "W2V application type.");
 DEFINE_bool(matrix_inverse, false, "Matrix inverse application type.");
 DEFINE_bool(least_squares, false, "Sparse least squares application type.");
-DEFINE_bool(ising_gibbs, false, "Ising gibbs model computation.");
 
 // Flag for tuning learning rate.
 DEFINE_bool(tune_learning_rate, false, "Tune learning rate for given problem.");
 DEFINE_double(tune_lr_lower_bound, 1e-20, "Lower bound for tuning learning rate.");
 DEFINE_double(tune_lr_upper_bound, 10, "Upper bound for tuning learning rate.");
-DEFINE_double(tune_epsilon, 1e-10, "Stops tuning learning rate when lower_bound and upper_bound are within this value.");
-DEFINE_double(tune_stepfactor, 10, "Factor of tuning stepsize.");
+DEFINE_double(tune_stepfactor, 10, "Factor to decrease learning_rate when tuning learning rate.");
 
 // MISC flags.
 DEFINE_int32(random_range, 100, "Range of random numbers for initializing the model.");
@@ -123,7 +121,6 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 
 #include "Partitioner/CycladesPartitioner.h"
 #include "Partitioner/DFSCachePartitioner.h"
-//#include "Partitioner/GraphCutsCachePartitioner.h"
 #include "Trainer/Trainer.h"
 #include "Trainer/CycladesTrainer.h"
 #include "Trainer/HogwildTrainer.h"
@@ -140,8 +137,5 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 
 #include "Datapoint/LSDatapoint.h"
 #include "Model/LSModel.h"
-
-/*#include "Datapoint/GibbsDatapoint.h"
-#include "Model/IsingGibbsModel.h"*/
 
 #endif
