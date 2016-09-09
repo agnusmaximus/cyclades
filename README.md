@@ -23,7 +23,7 @@ make
 ```
 
 # Fetching data
-Please run this command to fetch all the data
+To fetch all experiment data, from the project home directory, run
 ```c++
 cd data && sh fetch_all_data.sh && cd ..
 ```
