@@ -5,8 +5,25 @@ parallelizing stochastic optimization algorithms in a shared memory
 setting. See https://arxiv.org/abs/1605.09721 for more information.
 
 Here we implement SGD, SVRG and SAGA for sparse stochastic gradient
-descent methods applied to applications including matrix completion,
+descent methods applied to problems including matrix completion,
 graph eigenvalues, word embeddings and least squares.
+
+# Overview
+
+Cyclades is a general framework for parallelizing stochastic
+optimization algorithms in a shared memory setting. By partitioning
+the conflict graph of datapoints into batches of non-conflicting
+updates, serializability can be maintained under execution of multiple
+cores.
+
+![ScreenShot](https://raw.github.com/agnusmaximus/cyclades/master/images/Cyclades.pdf)
+
+Cyclades carefully samples updates, then finds conflict-groups, and
+allocates them across cores. Then, each core asynchronously updates
+the shared model, without incurring any read/write conflicts. This is
+possible by processing all the conflicting updates within the same
+core. After the processing of a batch is completed, the above is
+repeated, for as many iterations as required.
 
 # Building
 After cloning the repository, fetch the gflags submodule with
