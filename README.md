@@ -40,7 +40,7 @@ To see a list of flags that can be set, run
 ./cyclades --help
 ```
 
-A quick example to run after compiling and fetching the data is
+A quick example to run after compiling and fetching the data is (run from the home directory)
 ```c++
 ./build/cyclades   --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cyclades_trainer  -cyclades_batch_size=800 -n_epochs=20 -sgd --data_file="data/movielens/ml-1m/movielens_1m.data"
 ```
