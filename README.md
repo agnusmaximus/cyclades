@@ -16,7 +16,7 @@ the conflict graph of datapoints into batches of non-conflicting
 updates, serializability can be maintained under execution of multiple
 cores.
 
-<a href="url"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Cyclades.png" align="cetner" height="454" width="500" ></a>
+<a href="url"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Cyclades.png" align="center" height="300" width="300" ></a>
 
 Cyclades carefully samples updates, then finds conflict-groups, and
 allocates them across cores. Then, each core asynchronously updates
