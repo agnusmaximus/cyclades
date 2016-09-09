@@ -1,4 +1,4 @@
-# cyclades
+# Cyclades
 
 This repository contains code for Cyclades, a general framework for
 parallelizing stochastic optimization algorithms in a shared memory
