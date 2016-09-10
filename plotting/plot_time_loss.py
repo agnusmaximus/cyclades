@@ -56,6 +56,7 @@ def GetSettings(fname):
         setting["command"] = elements[0]
         setting["plot_title"] = elements[1] # Curve title
         setting["plot_color"] = elements[2] # Curve color
+        setting["line_style"] = elements[3]
         settings.append(setting)
     return settings
 
@@ -65,7 +66,7 @@ def Plot(name, settings):
         # Run command and plot
         command = setting["command"]
         times, losses = RunCommand(command)
-        ax.plot(times, losses, color=setting["plot_color"], linewidth=8, label=setting["plot_title"])
+        ax.plot(times, losses, color=setting["plot_color"], linewidth=8, label=setting["plot_title"], linestyle=setting["line_style"])
 
         # Bounds tuning.
         minx=min(minx,min(times))
@@ -74,6 +75,7 @@ def Plot(name, settings):
         maxy=max(maxy,max(losses))
 
     # scale
+    maxy = min(maxy, 10**15)
     ax.axis([minx*.95,maxx*1.05,miny*.95,maxy*1.05])
 
     # Do some stuff to make things nice looking.
