@@ -57,8 +57,8 @@ class DFSCachePartitioner : public Partitioner {
 	// Perform dfs on the graph.
 	std::vector<int> dfs_stack;
 	dfs_stack.reserve(n_nodes);
-	char *visited = new char[n_nodes];
-	memset(visited, 0, sizeof(char) * n_nodes);
+	std::vector<char> visited(n_nodes);
+	std::fill(visited.begin(), visited.end(), 0);
 	dfs_stack.push_back(datapoints[0]->GetOrder());
 	while (!dfs_stack.empty()) {
 	    int cur_node = dfs_stack[dfs_stack.size()-1];
@@ -75,7 +75,6 @@ class DFSCachePartitioner : public Partitioner {
 		dfs_stack.push_back(neighbor);
 	    }
 	}
-	delete [] visited;
 	return partitions;
     }
 };
