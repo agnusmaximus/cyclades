@@ -50,9 +50,8 @@ of convergence.
 <div align="center"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/SAGA%20Least%20Squares%202%20threads%20-%20NH2010.png"
 height="400" width="525" ></div> <em> On multithread SAGA, the
-serializability of Cyclades allows it to use a smaller stepsize than
-Hogwild. With a larger stepsize, Hogwild diverges due to
-conflicts. </em>
+serializability of Cyclades allows it to use a larger stepsize than
+Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 
 For full experiment details please refer to the paper.
 
