@@ -31,7 +31,7 @@ class DFSCachePartitioner : public Partitioner {
 	// Create the graph.
 	std::map<int, std::vector<int> > graph;
 	for (int i = 0; i < datapoints.size(); i++) {
-	    int datapoint_id = datapoints[i]->GetOrder();
+	    int datapoint_id = datapoints[i]->GetOrder() - 1;
 	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
 		int coordinate_id = coordinate + n_datapoints;
 		graph[datapoint_id].push_back(coordinate_id);
