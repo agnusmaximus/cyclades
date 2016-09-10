@@ -16,7 +16,7 @@ the conflict graph of datapoints into batches of non-conflicting
 updates, serializability can be maintained under execution of multiple
 cores.
 
-<div align="center"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Cyclades.png" height="400" width="525" ></div>
+<div align="center"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Cyclades.png" height="400" width="510" ></div>
 
 Cyclades carefully samples updates, then finds conflict-groups, and
 allocates them across cores. Then, each core asynchronously updates
@@ -33,7 +33,7 @@ performance too much. In fact, in some cases the avoidance of conflicts and
 the slightly better cache behavior of Cyclades leads to better
 performance.
 
-<div align="center"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png" height="400" width="410" ></div>
+<div align="center"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png" height="400" width="525" ></div>
 <em> Here we see that Cyclades initially starts slower than Hogwild, but due to cache locality and avoiding conflicts ends up being slightly faster. Both training methods were run for the same number of epochs in this plot, with the same learning rate. </em>
 
 Additionally, for various variance reduction algorithms we find that
