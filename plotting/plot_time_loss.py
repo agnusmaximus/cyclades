@@ -75,7 +75,7 @@ def Plot(name, settings):
         maxy=max(maxy,max(losses))
 
     # scale
-    maxy = min(maxy, 10**15)
+    maxy = min(maxy, 10**20)
     ax.axis([minx*.95,maxx*1.05,miny*.95,maxy*1.05])
 
     # Do some stuff to make things nice looking.
