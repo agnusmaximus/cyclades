@@ -56,7 +56,6 @@ class DFSCachePartitioner : public Partitioner {
 	}
 
 	DatapointPartitions partitions(n_threads);
-	return partitions;
 	int n_points_per_thread = datapoints.size() / n_threads + 1;
 	int n_nodes_processed_so_far = 0;
 
