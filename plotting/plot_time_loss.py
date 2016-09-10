@@ -85,6 +85,7 @@ def Plot(name, settings):
     basex = basey = 100
     ax.xaxis.set_major_locator(ticker.LogLocator(base = basex))
     ax.yaxis.set_major_locator(ticker.LogLocator(base = basey))
+    ax.legend(loc="upper right")
     plt.savefig(name, bbox_inches='tight')
 
 if __name__=="__main__":
