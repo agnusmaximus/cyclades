@@ -30,17 +30,22 @@ class DFSCachePartitioner : public Partitioner {
 
 	// Count the number of nodes. This is relatively very fast so it's not a problem
 	// that it's taking an extra loop.
-	int n_nodes = 0, avg_neighbors = 0;
+	int n_nodes = 0, avg_n_neighbors = 0;
 	for (int i = 0; i < datapoints.size(); i++) {
 	    int datapoint_id = datapoints[i]->GetOrder() - 1;
+	    avg_n_neighbors += datapoints[i]->GetCoordinates().size();
 	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
 		int coordinate_id = coordinate + n_datapoints;
 		n_nodes = fmax(n_nodes, coordinate_id);
 	    }
 	}
+	avg_n_neighbors /= n_datapoints;
 
 	// Create the graph.
 	std::vector<std::vector<int> > graph(n_nodes+1);
+	for (int i = 0; i < graph.size(); i++) {
+	    graph[i].reserve(avg_n_neighbors);
+	}
 	for (int i = 0; i < datapoints.size(); i++) {
 	    int datapoint_id = datapoints[i]->GetOrder() - 1;
 	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
@@ -51,6 +56,7 @@ class DFSCachePartitioner : public Partitioner {
 	}
 
 	DatapointPartitions partitions(n_threads);
+	return partitions;
 	int n_points_per_thread = datapoints.size() / n_threads + 1;
 	int n_nodes_processed_so_far = 0;
 
