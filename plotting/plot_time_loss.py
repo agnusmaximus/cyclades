@@ -91,3 +91,4 @@ if __name__=="__main__":
         sys.exit(0)
     settings = GetSettings(sys.argv[1])
     Plot(sys.argv[2], settings)
+    plt.title(sys.argv[2])
