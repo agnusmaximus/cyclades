@@ -35,13 +35,13 @@ performance.
 
 <div align="center"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png"
-height="400" width="525" ></div> <em> Here Cyclades initially starts
-slower than Hogwild due to the overhead of partitioning the conflict
+height="400" width="525" ></div> <em> Cyclades initially starts slower
+than Hogwild due to the overhead of partitioning the conflict
 graph. But by having better locality and avoiding conflicts Cyclades
-ends up slightly faster than Hogwild in terms of running time. In this
-plot both training methods were run for the same number of epochs,
-with the same learning rate. Note this graph was generated using the
-"custom" updater to optimize for performance. </em>
+ends up slightly faster in terms of running time. In this plot both
+training methods were run for the same number of epochs, with the same
+learning rate. Note this graph was generated using the "custom"
+updater to optimize for performance. </em>
 
 Additionally, for various variance reduction algorithms we find that
 Cyclades' serial equivalance allows it to outperform Hogwild in terms
