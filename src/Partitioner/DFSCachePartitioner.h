@@ -28,16 +28,25 @@ class DFSCachePartitioner : public Partitioner {
 	// Number of datapoints. To be used as graph node id offset.
 	int n_datapoints = datapoints.size();
 
+	// Count the number of nodes. This is relatively very fast so it's not a problem
+	// that it's taking an extra loop.
+	int n_nodes = 0, avg_neighbors = 0;
+	for (int i = 0; i < datapoints.size(); i++) {
+	    int datapoint_id = datapoints[i]->GetOrder() - 1;
+	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
+		int coordinate_id = coordinate + n_datapoints;
+		n_nodes = fmax(n_nodes, coordinate_id);
+	    }
+	}
+
 	// Create the graph.
-	std::map<int, std::vector<int> > graph;
-	int n_nodes = 0;
+	std::vector<std::vector<int> > graph(n_nodes+1);
 	for (int i = 0; i < datapoints.size(); i++) {
 	    int datapoint_id = datapoints[i]->GetOrder() - 1;
 	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
 		int coordinate_id = coordinate + n_datapoints;
 		graph[datapoint_id].push_back(coordinate_id);
 		graph[coordinate_id].push_back(datapoint_id);
-		n_nodes = fmax(n_nodes, coordinate_id);
 	    }
 	}
 
