@@ -41,7 +41,7 @@ graph. But by having better locality and avoiding conflicts Cyclades
 ends up slightly faster than Hogwild in terms of running time. In this
 plot both training methods were run for the same number of epochs,
 with the same learning rate. Note this graph was generated using the
-"custom" updater for increased performance. </em>
+"custom" updater to optimize for performance. </em>
 
 Additionally, for various variance reduction algorithms we find that
 Cyclades' serial equivalance allows it to outperform Hogwild in terms
