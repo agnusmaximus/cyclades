@@ -30,12 +30,14 @@ class DFSCachePartitioner : public Partitioner {
 
 	// Create the graph.
 	std::map<int, std::vector<int> > graph;
+	int n_nodes = 0;
 	for (int i = 0; i < datapoints.size(); i++) {
 	    int datapoint_id = datapoints[i]->GetOrder() - 1;
 	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
 		int coordinate_id = coordinate + n_datapoints;
 		graph[datapoint_id].push_back(coordinate_id);
 		graph[coordinate_id].push_back(datapoint_id);
+		n_nodes = fmax(n_nodes, coordinate_id);
 	    }
 	}
 
@@ -45,15 +47,17 @@ class DFSCachePartitioner : public Partitioner {
 
 	// Perform dfs on the graph.
 	std::vector<int> dfs_stack;
-	std::set<int> visited_nodes;
+	dfs_stack.reserve(n_nodes);
+	char *visited = new char[n_nodes];
+	memset(visited, 0, sizeof(char) * n_nodes);
 	dfs_stack.push_back(datapoints[0]->GetOrder());
 	while (!dfs_stack.empty()) {
 	    int cur_node = dfs_stack[dfs_stack.size()-1];
 	    dfs_stack.pop_back();
-	    if (visited_nodes.find(cur_node) != visited_nodes.end()) {
+	    if (visited[cur_node]) {
 		continue;
 	    }
-	    visited_nodes.insert(cur_node);
+	    visited[cur_node] = 1;
 	    if (cur_node < n_datapoints) {
 		int cur_assigned_thread = n_nodes_processed_so_far++ / n_points_per_thread;
 		partitions.AddDatapointToThread(datapoints[cur_node], cur_assigned_thread);
@@ -62,6 +66,7 @@ class DFSCachePartitioner : public Partitioner {
 		dfs_stack.push_back(neighbor);
 	    }
 	}
+	delete [] visited;
 	return partitions;
     }
 };
