@@ -143,6 +143,8 @@ class MCModel : public Model {
     }
 
     void CustomApplyGradient(Datapoint *datapoint, Gradient *gradient) override {
+	// Custom SGD. This is fast because it avoids intermediate writes to memory,
+	// and simply updates the model directly and simultaneously.
 	double gradient_coefficient = gradient->coeffs[0];
 	const std::vector<int> &coordinates = datapoint->GetCoordinates();
 	int user_coordinate = coordinates[0];

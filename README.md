@@ -5,8 +5,8 @@ parallelizing stochastic optimization algorithms in a shared memory
 setting. See https://arxiv.org/abs/1605.09721 for more information.
 
 Here we implement SGD, SVRG and SAGA for sparse stochastic gradient
-descent methods applied to problems including matrix completion,
-graph eigenvalues, word embeddings and least squares.
+descent methods applied to problems including matrix completion, graph
+eigenvalues, word embeddings and least squares.
 
 # Overview
 
@@ -24,6 +24,21 @@ the shared model, without incurring any read/write conflicts. This is
 possible by processing all the conflicting updates within the same
 core. After the processing of a batch is completed, the above is
 repeated, for as many iterations as required.
+
+# Experiments
+
+Maintaining serializability confers numerous benefits, and the
+additional overhead of partitioning the conflict graph does not hinder
+performance too much. In fact, in some cases the avoidance of conflicts and
+the slightly better cache behavior of Cyclades leads to better
+performance.
+
+
+Additionally, for various variance reduction algorithms we find that
+Cyclades' serial equivalance allows it to outperform Hogwild in terms
+of convergence.
+
+For full experiment details please refer to the paper.
 
 # Building
 After cloning the repository, fetch the gflags submodule with
