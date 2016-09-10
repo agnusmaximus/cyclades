@@ -1,4 +1,4 @@
-# sample call: python plotting/plot_time_loss.py plotting/plot_time_loss.setting matrix_completion_8_threads_compare
+# sample call: python plotting/plot_time_loss.py plotting/plot_time_loss.setting "Matrix Completion 8 threads - Movielens 1m"
 
 from __future__ import print_function
 import sys
@@ -16,6 +16,8 @@ import numpy as np
 # Plot customization
 f, ax = plt.subplots()
 ax.set_xlabel("Time/s", fontsize=26)
+ttl = ax.title
+ttl.set_position([.5, 1.05])
 ax.set_ylabel("Objective Value", fontsize=26)
 ax.set_yscale('log')
 ax.set_xscale('log')
@@ -89,6 +91,6 @@ if __name__=="__main__":
     if len(sys.argv) != 3:
         print("Usage: plot_time_loss.py settings_file output_name")
         sys.exit(0)
+    ax.set_title(sys.argv[2], fontsize=26)
     settings = GetSettings(sys.argv[1])
     Plot(sys.argv[2], settings)
-    plt.title(sys.argv[2])
