@@ -56,6 +56,22 @@ class Model {
     virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) = 0;
     virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) = 0;
     virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) = 0;
+
+    // The following methods are for custom gradient creation.
+    virtual void CustomCatchUp(int index, int diff) {
+	std::cout << "Model.h: CustomCatchUp is not implemented." << std::endl;
+	exit(0);
+    }
+
+    virtual void CustomPrepareGradient(Datapoint *datapoint, Gradient *gradient) {
+	std::cout << "Model.h: CustomPrepareGradient is not implemented." << std::endl;
+	exit(0);
+    }
+
+    virtual void CustomApplyGradient(Datapoint *datapoint, Gradient *gradient) {
+	std::cout << "Model.h: CustomApplyGradient is not implemented." << std::endl;
+	exit(0);
+    }
 };
 
 #endif

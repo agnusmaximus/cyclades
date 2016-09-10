@@ -76,7 +76,7 @@ class LSModel : public Model {
 
 	// Add some noise to B.
 	for (int i = 0; i < datapoints.size(); i++) {
-	    B[i] += rand() % FLAGS_random_range;
+	    //B[i] += rand() % FLAGS_random_range;
 	}
     }
 

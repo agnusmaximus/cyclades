@@ -45,6 +45,9 @@ TrainStatistics RunOnce() {
     else if (FLAGS_saga) {
 	updater = new SAGAUpdater(model, datapoints);
     }
+    else if (FLAGS_custom) {
+	updater = new CustomUpdater(model, datapoints);
+    }
     if (!updater) {
 	std::cerr << "Main: updater class not chosen." << std::endl;
 	exit(0);
