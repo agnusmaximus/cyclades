@@ -83,6 +83,7 @@ protected:
     }
 
     virtual void CatchUp(int index, int diff) {
+	if (!model->NeedCatchUp()) return;
 	if (diff < 0) diff = 0;
 	double geom_sum = 0;
 	double mu = Mu(index);

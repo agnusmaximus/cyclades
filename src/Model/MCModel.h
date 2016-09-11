@@ -131,6 +131,10 @@ class MCModel : public Model {
 	}
     }
 
+    virtual bool NeedCatchUp() {
+	return false;
+    }
+
     //
     // The following code is custom performance optimization for use with the custom updater.
     //

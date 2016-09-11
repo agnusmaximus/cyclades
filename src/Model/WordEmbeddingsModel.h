@@ -142,11 +142,9 @@ class WordEmbeddingsModel : public Model {
     }
 
     virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
-	out = 0;
     }
 
     virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
-	std::fill(out.begin(), out.end(), 0);
     }
 
     virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
@@ -155,6 +153,10 @@ class WordEmbeddingsModel : public Model {
 	for (int i = 0; i < w2v_length; i++) {
 	    out[i] = (2 * g->coeffs[0] * (local_model[c1*w2v_length+i] + local_model[c2*w2v_length+i]));
 	}
+    }
+
+    virtual bool NeedCatchUp() {
+	return false;
     }
 };
 
