@@ -20,6 +20,7 @@ DEFINE_int32(cyclades_batch_size, 5000, "Batch size for cyclades.");
 
 #include "../DatapointPartitions/DatapointPartitions.h"
 #include "Partitioner.h"
+#include <unordered_map>
 
 class CycladesPartitioner : public Partitioner {
 private:
@@ -40,7 +41,7 @@ private:
     }
 
     void ComputeCC(const std::vector<Datapoint *> & datapoints, int start_index, int end_index,
-		   std::map<int, std::vector<Datapoint *>> &components, int *tree) {
+		   std::unordered_map<int, std::vector<Datapoint *>> &components, int *tree) {
 	// Initialize tree for union find.
 	for (int i = 0; i < model_size + FLAGS_cyclades_batch_size; i++) {
 	    tree[i] = i;
@@ -89,7 +90,7 @@ public:
 	int num_total_batches = ceil((double)datapoints_copy.size() / (double)FLAGS_cyclades_batch_size);
 
 	// Process FLAGS_cyclades_batch_size pointer per iteration, computing CCS on them.
-	std::vector<std::map<int, std::vector<Datapoint *>>> components(num_total_batches);
+	std::vector<std::unordered_map<int, std::vector<Datapoint *>>> components(num_total_batches);
 	#pragma omp parallel for
 	for (int datapoint_count = 0; datapoint_count < datapoints_copy.size(); datapoint_count += FLAGS_cyclades_batch_size) {
 	    // Current batch index.
@@ -105,7 +106,7 @@ public:
 
 	// Load balance the connected components (load balance within the batch, not across it).
 	for (int batch = 0; batch < num_total_batches; batch++) {
-	    for (std::map<int, std::vector<Datapoint *>>::iterator it = components[batch].begin();
+	    for (std::unordered_map<int, std::vector<Datapoint *>>::iterator it = components[batch].begin();
 		 it != components[batch].end(); it++) {
 		partitions.AddDatapointsToLeastLoadedThread(it->second);
 	    }
