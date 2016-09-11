@@ -57,15 +57,6 @@ protected:
     // A reference to all_coordinates, which indexes all the coordinates of the model.
     std::vector<int> all_coordinates;
 
-    // The following datastructures are used to store extra 1d/2d vectors
-    // on the fly, which may be needed by a subclass.
-    // [thread][name][2d_vector].
-    std::vector<std::map<std::string, std::vector<std::vector<double> > > > thread_local_2d_vectors;
-    std::vector<std::map<std::string, std::vector<double> > > thread_local_1d_vectors;
-    // [name][2d_vector].
-    std::map<std::string, std::vector<std::vector<double> > > global_2d_vectors;
-    std::map<std::string, std::vector<double > > global_1d_vectors;
-
     // H, Nu and Mu for updates.
     virtual double H(int coordinate, int index_into_coordinate_vector) = 0;
     virtual double Nu(int coordinate, int index_into_coordinate_vector) = 0;
@@ -139,10 +130,6 @@ public:
 	    thread_gradients[thread].SetUp(model);
 	}
 	this->model = model;
-
-	// Create thread local vectors for each thread.
-	thread_local_2d_vectors.resize(FLAGS_n_threads);
-	thread_local_1d_vectors.resize(FLAGS_n_threads);
 
 	// Set up bookkeping.
 	this->datapoints = datapoints;
