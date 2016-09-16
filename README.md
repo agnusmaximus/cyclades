@@ -38,7 +38,7 @@ src="https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20C
 height="400" width="525" ></div>
 <div align="right"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%20Speedup.png"
-height="400" width="500" ></div>
+height="400" width="475" ></div>
 <em> Cyclades initially starts slower
 than Hogwild due to the overhead of partitioning the conflict
 graph. But by having better locality and avoiding conflicts Cyclades
