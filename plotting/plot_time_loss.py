@@ -32,14 +32,16 @@ ax.tick_params(axis='both', which='minor', labelsize=26, pad=7)
 partition_time_matcher = re.compile("Partition Time\(s\): (.*)")
 plot_cache_directory = "./plotting_cache/"
 
-def RunCommand(command, use_cached_output):
+def RunCommand(command, use_cached_output, reps=3):
+    out = ""
     command_file = plot_cache_directory + "".join(x for x in command if x.isalnum())
     if not use_cached_output:
         # We expect the output of the command to be of form:
         # Line 1: Partition Time(s): ...
         # Lines 2+: Epoch: %d\tTime: %f\tLoss:%f
         print("Running command: %s" % command)
-        out = commands.getstatusoutput(command)[1]
+        for rep in range(reps):
+            out += commands.getstatusoutput(command)[1]
         f_cache_out = open(command_file, "w+")
         print(out, file=f_cache_out);
         f_cache_out.close()
@@ -50,16 +52,31 @@ def RunCommand(command, use_cached_output):
         f_cache_in.close()
 
     lines = out.split("\n")
-    partitioning_time = float(partition_time_matcher.search(lines[0]).group(1))
-    times, losses = [], []
-    for line in lines[1:]:
-        epoch, time, loss = [x for x in line.split("\t") if x != ""]
-        epoch = int(epoch.split(":")[-1].strip())
-        time = float(time.split(":")[-1].strip())
-        loss = float(loss.split(":")[-1].strip())
-        times.append(time)
-        losses.append(loss)
-    times = [x + partitioning_time for x in times]
+    partition_time = 0
+    epoch_time_data, epoch_loss_data = {}, {}
+    n_epochs = 0
+    for line in lines:
+        partitioning_match = partition_time_matcher.search(line)
+        if partitioning_match:
+            partition_time = float(partitioning_match.group(1))
+        else:
+            epoch, time, loss = [x for x in line.split("\t") if x != ""]
+            epoch = int(epoch.split(":")[-1].strip())
+            time = float(time.split(":")[-1].strip())
+            loss = float(loss.split(":")[-1].strip())
+            if epoch not in epoch_time_data:
+                epoch_time_data[epoch] = 0
+            if epoch not in epoch_loss_data:
+                epoch_loss_data[epoch] = 0
+            epoch_time_data[epoch] += time + partition_time
+            epoch_loss_data[epoch] += loss
+            n_epochs = max(n_epochs, epoch)
+    for epoch, value in epoch_time_data.items():
+        epoch_time_data[epoch] = value / reps
+    for epoch, value in epoch_loss_data.items():
+        epoch_loss_data[epoch] = value / reps
+    times = [epoch_time_data[x] for x in range(n_epochs)]
+    losses = [epoch_loss_data[x] for x in range(n_epochs)]
     return times, losses
 
 def GetSettings(fname):
