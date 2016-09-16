@@ -59,7 +59,7 @@ def RunCommand(command, use_cached_output):
         loss = float(loss.split(":")[-1].strip())
         times.append(time)
         losses.append(loss)
-        times = [x + partitioning_time for x in times]
+    times = [x + partitioning_time for x in times]
     return times, losses
 
 def GetSettings(fname):
@@ -102,7 +102,7 @@ def Plot(name, settings, use_cached_output):
         ax.yaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
 
     basex = basey = 100
-    ax.xaxis.set_major_locator(ticker.LogLocator(base = basex))
+    #ax.xaxis.set_major_locator(ticker.LogLocator(base = basex))
     ax.yaxis.set_major_locator(ticker.LogLocator(base = basey))
     ax.legend(loc="upper right")
     plt.savefig(name, bbox_inches='tight')
