@@ -33,10 +33,10 @@ performance too much. In fact, in some cases the avoidance of conflicts and
 the slightly better cache behavior of Cyclades leads to better
 performance.
 
-<div align="left"><img
+<div float="left"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png"
 height="400" width="525" ></div>
-<div align="right"><img
+<div float="left"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%20Speedup.png"
 height="400" width="475" ></div>
 <em> Cyclades initially starts slower
