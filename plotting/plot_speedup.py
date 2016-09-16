@@ -65,9 +65,9 @@ def RunCommand(command, use_cached_output, reps=3):
         # Lines 2+: Epoch: %d\tTime: %f\tLoss:%f
         print("Running command: %s" % command)
         for rep in range(reps):
-            out += commands.getstatusoutput(command)[1]
+            out += commands.getstatusoutput(command)[1] + "\n"
         f_cache_out = open(command_file, "w+")
-        print(out, file=f_cache_out);
+        print(out.strip(), file=f_cache_out);
         f_cache_out.close()
     else:
         print("Loading command file: %s" % command_file)
