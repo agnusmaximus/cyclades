@@ -1,4 +1,4 @@
-# sample call: python plotting/plot_time_loss.py plotting/plot_time_loss.setting "Matrix Completion 8 threads - Movielens 1m"
+# sample call: python plotting/plot_time_loss.py plotting/plot_time_loss.setting "Matrix Completion 8 threads - Movielens 1m" 0
 
 from __future__ import print_function
 import sys
