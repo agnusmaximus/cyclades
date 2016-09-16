@@ -1,4 +1,4 @@
-# sample call: python plotting/plot_speedup.py plotting/quick_nh2010_speedup.settings "Test Title" "1,2,4,8,16" 0
+# sample call: python plotting/plot_speedup.py plotting/quick_nh2010_speedup.settings "Test Title" 0
 
 from __future__ import print_function
 import sys
@@ -44,10 +44,15 @@ def GetSettings(fname):
         setting["plot_title"] = elements[1] # Curve title
         setting["plot_color"] = elements[2] # Curve color
         setting["line_style"] = elements[3]
+        setting["threads"] = [int(x) for x in elements[4].split("|")]
+        setting["learning_rates"] = [float(x) for x in elements[5].split("|")]
         settings.append(setting)
 
         if "n_threads" in setting["command"]:
             print("Error: command must not have n_threads set")
+            sys.exit(0)
+        if "learning_rate" in setting["command"]:
+            print("Error: command must not have learning rate set")
             sys.exit(0)
     return settings
 
@@ -105,9 +110,10 @@ def Plot(name, settings, threads, use_cached_output):
     for setting_index, setting in enumerate(settings):
         if setting_index not in individual_times_losses:
             individual_times_losses[setting_index] = {}
-        for thread in threads:
+        for t_index, thread in enumerate(threads):
             command = setting["command"]
             command += " --n_threads=%d" % thread
+            command += " --learning_rate=%s" % str(setting["learning_rates"][t_index])
             times, losses = RunCommand(command, use_cached_output)
             individual_times_losses[setting_index][thread] = [times, losses]
 
@@ -142,7 +148,6 @@ def Plot(name, settings, threads, use_cached_output):
 
     for setting_index, setting in enumerate(settings):
         speedup = individual_speedups[setting_index]
-        print(setting_index, speedup)
         ax.plot(threads, speedup, color=setting["plot_color"], linewidth=8, label=setting["plot_title"], linestyle=setting["line_style"])
 
     # Styling
@@ -155,16 +160,16 @@ def Plot(name, settings, threads, use_cached_output):
     plt.savefig(name, bbox_inches='tight')
 
 if __name__=="__main__":
-    if len(sys.argv) != 5:
-        print("Usage: plot_speedup.py settings_file output_name threads use_cached_output")
+    if len(sys.argv) != 4:
+        print("Usage: plot_speedup.py settings_file output_name use_cached_output")
         sys.exit(0)
 
     if not os.path.exists(plot_cache_directory):
         os.makedirs(plot_cache_directory)
     ax.set_title(sys.argv[2], fontsize=26)
     settings = GetSettings(sys.argv[1])
-    threads = [int(x) for x in sys.argv[3].split(",")]
+    threads = settings[0]["threads"]
     if 1 not in threads:
         threads = [1] + threads
     threads.sort()
-    Plot(sys.argv[2], settings, threads, int(sys.argv[4]))
+    Plot(sys.argv[2], settings, threads, int(sys.argv[3]))
