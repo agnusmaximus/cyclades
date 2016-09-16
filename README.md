@@ -36,7 +36,7 @@ performance.
 <div float="left"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png"
 height="400" width="525" ></div>
-<div float="left"><img
+<div float="right"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%20Speedup.png"
 height="400" width="475" ></div>
 <em> Cyclades initially starts slower
