@@ -34,6 +34,8 @@ the slightly better cache behavior of Cyclades leads to better
 performance.
 
 
+![alt-text-1](https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png "title-1") ![alt-text-2](https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png "title-2")
+
 <div float="left"><img
 src="https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png"
 height="400" width="525" ></div> <img
