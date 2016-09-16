@@ -19,7 +19,7 @@ import numpy as np
 import os
 
 # Plot customization
-f, ax = plt.subplots()
+f, ax = plt.subplots(figsize=(15,15))
 ax.set_xlabel("n_threads", fontsize=26)
 ttl = ax.title
 ttl.set_position([.5, 1.05])
