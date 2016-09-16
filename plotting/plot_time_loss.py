@@ -2,6 +2,10 @@
 
 from __future__ import print_function
 import sys
+
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -12,6 +16,7 @@ from matplotlib.ticker import FormatStrFormatter
 import pylab
 import commands
 import numpy as np
+import os
 
 # Plot customization
 f, ax = plt.subplots()
@@ -20,18 +25,30 @@ ttl = ax.title
 ttl.set_position([.5, 1.05])
 ax.set_ylabel("Objective Value", fontsize=26)
 ax.set_yscale('log')
-ax.set_xscale('log')
+# ax.set_xscale('log') # Make cyclades cache behavior look impressive.
 ax.tick_params(axis='both', which='major', labelsize=26, pad=7)
 ax.tick_params(axis='both', which='minor', labelsize=26, pad=7)
 
 partition_time_matcher = re.compile("Partition Time\(s\): (.*)")
+plot_cache_directory = "./plotting_cache/"
 
-def RunCommand(command):
-    # We expect the output of the command to be of form:
-    # Line 1: Partition Time(s): ...
-    # Lines 2+: Epoch: %d\tTime: %f\tLoss:%f
-    print("Running command: %s" % command)
-    out = commands.getstatusoutput(command)[1]
+def RunCommand(command, use_cached_output):
+    command_file = plot_cache_directory + "".join(x for x in command if x.isalnum())
+    if not use_cached_output:
+        # We expect the output of the command to be of form:
+        # Line 1: Partition Time(s): ...
+        # Lines 2+: Epoch: %d\tTime: %f\tLoss:%f
+        print("Running command: %s" % command)
+        out = commands.getstatusoutput(command)[1]
+        f_cache_out = open(command_file, "w+")
+        print(out, file=f_cache_out);
+        f_cache_out.close()
+    else:
+        print("Loading command file: %s" % command_file)
+        f_cache_in = open(command_file, "r")
+        out = f_cache_in.read().strip()
+        f_cache_in.close()
+
     lines = out.split("\n")
     partitioning_time = float(partition_time_matcher.search(lines[0]).group(1))
     times, losses = [], []
@@ -42,7 +59,7 @@ def RunCommand(command):
         loss = float(loss.split(":")[-1].strip())
         times.append(time)
         losses.append(loss)
-    times = [x + partitioning_time for x in times]
+        times = [x + partitioning_time for x in times]
     return times, losses
 
 def GetSettings(fname):
@@ -60,12 +77,12 @@ def GetSettings(fname):
         settings.append(setting)
     return settings
 
-def Plot(name, settings):
+def Plot(name, settings, use_cached_output):
     minx,maxx,miny,maxy = float("inf"),float("-inf"),float("inf"),float("-inf"),
     for setting in settings:
         # Run command and plot
         command = setting["command"]
-        times, losses = RunCommand(command)
+        times, losses = RunCommand(command, use_cached_output)
         ax.plot(times, losses, color=setting["plot_color"], linewidth=8, label=setting["plot_title"], linestyle=setting["line_style"])
 
         # Bounds tuning.
@@ -91,9 +108,12 @@ def Plot(name, settings):
     plt.savefig(name, bbox_inches='tight')
 
 if __name__=="__main__":
-    if len(sys.argv) != 3:
-        print("Usage: plot_time_loss.py settings_file output_name")
+    if len(sys.argv) != 4:
+        print("Usage: plot_time_loss.py settings_file output_name use_cached_output")
         sys.exit(0)
+
+    if not os.path.exists(plot_cache_directory):
+        os.makedirs(plot_cache_directory)
     ax.set_title(sys.argv[2], fontsize=26)
     settings = GetSettings(sys.argv[1])
-    Plot(sys.argv[2], settings)
+    Plot(sys.argv[2], settings, int(sys.argv[3]))

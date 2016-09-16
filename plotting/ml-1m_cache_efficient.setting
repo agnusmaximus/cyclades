@@ -1,0 +1,2 @@
+./cyclades --data_file="./data/movielens/ml-1m/movielens_1m.data" --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cache_efficient_hogwild_trainer -n_epochs=200 -custom, Cache Efficient Hogwild! 2 Threads, red, solid
+./cyclades --data_file="./data/movielens/ml-1m/movielens_1m.data" --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -hogwild_trainer -n_epochs=200 -custom, Hogwild! 2 Threads, blue, solid
