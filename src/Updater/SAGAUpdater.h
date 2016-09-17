@@ -62,7 +62,7 @@ class SAGAUpdater: public Updater {
 
     double H(int coordinate, int index_into_coordinate_vector) override {
 	int datapoint_order = GET_THREAD_LOCAL_VECTOR(datapoint_order);
-	return FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h)[coordinate][index_into_coordinate_vector]
+	return FLAGS_learning_rate * (-GET_THREAD_LOCAL_VECTOR(h)[coordinate][index_into_coordinate_vector]
 				      + prev_gradients[datapoint_order][coordinate][index_into_coordinate_vector]
 				      - GET_GLOBAL_VECTOR(sum_gradients)[coordinate][index_into_coordinate_vector] / datapoints.size());
     }

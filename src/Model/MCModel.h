@@ -127,7 +127,7 @@ class MCModel : public Model {
 	else
 	    other_coordinate = g->datapoint->GetCoordinates()[0];
 	for (int i = 0; i < rlength; i++) {
-	    out[i] = -g->coeffs[0] * local_model[other_coordinate * rlength + i];
+	    out[i] = g->coeffs[0] * local_model[other_coordinate * rlength + i];
 	}
     }
 

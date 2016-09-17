@@ -69,8 +69,8 @@ protected:
     }
 
     double H(int coordinate, int index_into_coordinate_vector) {
-	return FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h_x)[coordinate][index_into_coordinate_vector] -
-							  GET_THREAD_LOCAL_VECTOR(h_y)[coordinate][index_into_coordinate_vector]);
+	return -FLAGS_learning_rate * (GET_THREAD_LOCAL_VECTOR(h_x)[coordinate][index_into_coordinate_vector] -
+				       GET_THREAD_LOCAL_VECTOR(h_y)[coordinate][index_into_coordinate_vector]);
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
