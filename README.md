@@ -70,11 +70,12 @@ cd into the project directory
 cd cyclades
 ```
 After the submodule fetches use cmake to generate a build file.
+
 On Linux do
 ```c++
 cmake .
 ```
-On Mac Os X do
+While on Mac OS X do
 ```c++
 cmake -DCMAKE_CXX_COMPILER=clang-omp++ .
 ```
