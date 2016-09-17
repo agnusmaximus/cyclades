@@ -57,6 +57,8 @@ Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 For full experiment details please refer to the paper.
 
 # Building
+<em> Compilation requires git, make, and cmake. </em>
+
 After cloning the repository, fetch the gflags submodule with
 ```c++
 git submodule init && git submodule update
