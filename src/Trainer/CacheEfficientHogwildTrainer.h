@@ -17,6 +17,12 @@
 #ifndef _CACHE_EFFICIENT_HOGWILD_TRAINER_
 #define _CACHE_EFFICIENT_HOGWILD_TRAINER_
 
+#include "../Partitioner/DFSCachePartitioner.h"
+#include "../Partitioner/GreedyCachePartitioner.h"
+
+DEFINE_bool(dfs_cache_partitioner, false, "For cache efficient hogwild trainer, use the DFS method to cache partition data points.");
+DEFINE_bool(greedy_cache_partitioner, false, "For cache efficient hogwild trainer, use an n^2 greedy algorithm to generate cache friendyl data point ordering.");
+
 class CacheEfficientHogwildTrainer : public Trainer {
 public:
     CacheEfficientHogwildTrainer() {}
@@ -24,9 +30,20 @@ public:
 
     TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
 	// Partition.
-	DFSCachePartitioner partitioner;
 	Timer partition_timer;
-	DatapointPartitions partitions = partitioner.Partition(datapoints, FLAGS_n_threads);
+	DatapointPartitions partitions(FLAGS_n_threads);
+	if (FLAGS_dfs_cache_partitioner) {
+	    DFSCachePartitioner partitioner;
+	    partitions = partitioner.Partition(datapoints, FLAGS_n_threads);
+	}
+	else if (FLAGS_greedy_cache_partitioner) {
+	    GreedyCachePartitioner partitioner;
+	    partitions = partitioner.Partition(datapoints, FLAGS_n_threads);
+	}
+	else {
+	    std::cout << "CacheEfficientHogwildTrainer.h: No partitioning method selected" << std::endl;
+	    exit(0);
+	}
 	if (FLAGS_print_partition_time) {
 	    this->PrintPartitionTime(partition_timer);
 	}
