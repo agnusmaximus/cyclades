@@ -3,20 +3,18 @@ import sys
 import random
 
 output_file = sys.argv[1]
-n = int(sys.argv[2])
-sparsity_percentage = float(sys.argv[3])
+n_datapoint = int(sys.argv[2])
+n_model_coordinates = int(sys.argv[3])
+sparsity_percentage = float(sys.argv[4])
 f_out = open(output_file, "w")
 
-matrix = [[0 for i in range(n)] for j in range(n)]
-for i in range(n):
-    for j in range(n):
-        if random.uniform(0, 1) < sparsity_percentage:
-            matrix[i][j] = random.uniform(1, 1000)
-
-print("%d" % n, file=f_out)
-for i in range(n):
-    row = matrix[i]
-    rest_str = " ".join([str(ind) + " " + str(v) for ind,v in enumerate(row) if v != 0])
+print("%d" % n_model_coordinates, file=f_out)
+sample_set = range(0, n_model_coordinates)
+for i in range(n_datapoint):
+    n_coordinates = int(random.uniform(0, 1) * n_model_coordinates * sparsity_percentage)
+    nnz_values = [random.uniform(1, 1000) for i in range(n_coordinates)]
+    indices = random.sample(sample_set, n_coordinates)
+    rest_str = " ".join([str(indices[i]) + " " + str(nnz_values[i]) for i in range(n_coordinates)])
     line_str = "%d %s" % (i, rest_str)
     print(line_str, file=f_out)
 f_out.close()

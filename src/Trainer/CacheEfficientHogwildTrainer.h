@@ -17,6 +17,7 @@
 #ifndef _CACHE_EFFICIENT_HOGWILD_TRAINER_
 #define _CACHE_EFFICIENT_HOGWILD_TRAINER_
 
+#include <map>
 #include "../Partitioner/DFSCachePartitioner.h"
 #include "../Partitioner/GreedyCachePartitioner.h"
 
@@ -24,11 +25,45 @@ DEFINE_bool(dfs_cache_partitioner, false, "For cache efficient hogwild trainer, 
 DEFINE_bool(greedy_cache_partitioner, false, "For cache efficient hogwild trainer, use an n^2 greedy algorithm to generate cache friendyl data point ordering.");
 
 class CacheEfficientHogwildTrainer : public Trainer {
+protected:
+    void PrintStatsAboutProblem(const std::vector<Datapoint *> &datapoints) {
+	int n_total_coordinate_accesses = 0;
+	int n_distinct_model_accesses = 0;
+	double avg_num_coordinates_accessed_per_datapoint = 0;
+	int max_coordinates_accessed_per_datapoint = 0;
+	int min_coordinates_accessed_per_datapoint = INT_MAX;
+	std::map<int, bool> coordinates_set;
+	for (int i = 0; i < datapoints.size(); i++) {
+	    n_total_coordinate_accesses += datapoints[i]->GetCoordinates().size();
+	    for (const auto & coordinate : datapoints[i]->GetCoordinates()) {
+		coordinates_set[coordinate] = 1;
+	    }
+	    max_coordinates_accessed_per_datapoint = fmax(max_coordinates_accessed_per_datapoint, datapoints[i]->GetCoordinates().size());
+	    min_coordinates_accessed_per_datapoint = fmin(max_coordinates_accessed_per_datapoint, datapoints[i]->GetCoordinates().size());
+	}
+	n_distinct_model_accesses = coordinates_set.size();
+	avg_num_coordinates_accessed_per_datapoint = n_total_coordinate_accesses / (double)datapoints.size();
+	printf("n_datapoints=%d\n"
+	       "n_total_coordinate_accesses=%d\n"
+	       "n_distinct_model_acceses=%d\n"
+	       "avg_num_coordinates_accessed_per_datapoint=%lf\n"
+	       "max_coordinates_accessed=%d\n"
+	       "min_coordinates_accessed=%d\n",
+	       (int)datapoints.size(),
+	       n_total_coordinate_accesses,
+	       n_distinct_model_accesses,
+	       avg_num_coordinates_accessed_per_datapoint,
+	       max_coordinates_accessed_per_datapoint,
+	       min_coordinates_accessed_per_datapoint);
+    }
 public:
     CacheEfficientHogwildTrainer() {}
     ~CacheEfficientHogwildTrainer() {}
 
     TrainStatistics Train(Model *model, const std::vector<Datapoint *> & datapoints, Updater *updater) override {
+	// Print some stats.
+	PrintStatsAboutProblem(datapoints);
+
 	// Partition.
 	Timer partition_timer;
 	DatapointPartitions partitions(FLAGS_n_threads);
