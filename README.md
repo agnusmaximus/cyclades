@@ -57,7 +57,7 @@ Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 For full experiment details please refer to the paper.
 
 # Building
-<em> Note that compilation requires [git](https://git-scm.com/), [make](https://www.gnu.org/software/make/), and [cmake](https://cmake.org/). </em>
+<em> Note that compilation requires [git](https://git-scm.com/), [make](https://www.gnu.org/software/make/), [cmake](https://cmake.org/), and [OpenMP](http://openmp.org/wp/). </em>
 
 After cloning the repository, fetch the gflags submodule with
 ```c++
