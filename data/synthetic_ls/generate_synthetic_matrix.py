@@ -12,9 +12,9 @@ print("%d" % n_model_coordinates, file=f_out)
 sample_set = range(0, n_model_coordinates)
 for i in range(n_datapoint):
     n_coordinates = int(random.uniform(0, 1) * n_model_coordinates * sparsity_percentage)
-    nnz_values = [random.uniform(1, 1000) for i in range(n_coordinates)]
+    nnz_values = [random.uniform(1, 1000) for ii in range(n_coordinates)]
     indices = random.sample(sample_set, n_coordinates)
-    rest_str = " ".join([str(indices[i]) + " " + str(nnz_values[i]) for i in range(n_coordinates)])
+    rest_str = " ".join([str(indices[ii]) + " " + str(nnz_values[ii]) for ii in range(n_coordinates)])
     line_str = "%d %s" % (i, rest_str)
     print(line_str, file=f_out)
 f_out.close()
