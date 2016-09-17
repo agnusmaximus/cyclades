@@ -59,12 +59,12 @@ protected:
 	int coord_size = model->CoordinateSize();
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->H(index, h_x[index], g, cur_model);
+	    model->H_bar(index, h_x[index], g, cur_model);
 	}
 	model->PrecomputeCoefficients(datapoint, g, model_copy);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->H(index, h_y[index], g, model_copy);
+	    model->H_bar(index, h_y[index], g, model_copy);
 	}
     }
 
@@ -122,7 +122,7 @@ protected:
 		    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
 		    std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
 		    for (auto & coord : datapoint->GetCoordinates()) {
-			model->H(coord, g_h[coord], grad, model_copy);
+			model->H_bar(coord, g_h[coord], grad, model_copy);
 			model->Mu(coord, g_mu[coord], model_copy);
 			model->Nu(coord, g_nu[coord], model_copy);
 		    }

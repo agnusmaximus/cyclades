@@ -120,7 +120,7 @@ class MCModel : public Model {
     void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
     }
 
-    void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
+    void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	double other_coordinate = 0;
 	if (g->datapoint->GetCoordinates()[0] == coordinate)
 	    other_coordinate = g->datapoint->GetCoordinates()[1];

@@ -218,7 +218,7 @@ public:
 	out[0] = -B[coordinate] / (double)n_coords;
     }
 
-    void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
+    void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	out[0] = g->coeffs[coordinate];
     }
 };

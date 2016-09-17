@@ -43,7 +43,7 @@ protected:
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->H(index, h[index], g, cur_model);
+	    model->H_bar(index, h[index], g, cur_model);
 	}
     }
 

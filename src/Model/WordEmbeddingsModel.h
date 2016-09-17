@@ -147,7 +147,7 @@ class WordEmbeddingsModel : public Model {
     virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
     }
 
-    virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
+    virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
 	int c1 = g->datapoint->GetCoordinates()[0];
 	int c2 = g->datapoint->GetCoordinates()[1];
 	for (int i = 0; i < w2v_length; i++) {
