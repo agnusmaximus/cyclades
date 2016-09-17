@@ -31,7 +31,7 @@ protected:
 	std::vector<std::vector<double> > &nu = GET_THREAD_LOCAL_VECTOR(nu);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
-	    model->Nu(index, nu[index], cur_model);
+	    model->Kappa(index, nu[index], cur_model);
 	}
     }
 
@@ -59,7 +59,7 @@ protected:
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
-	return GET_THREAD_LOCAL_VECTOR(nu)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
+	return -GET_THREAD_LOCAL_VECTOR(nu)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
     double Mu(int coordinate) {

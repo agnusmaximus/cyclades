@@ -214,8 +214,8 @@ public:
 	out = lambda / (double)n_coords;
     }
 
-    void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
-	out[0] = -B[coordinate] / (double)n_coords;
+    void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+	out[0] = B[coordinate] / (double)n_coords;
     }
 
     void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {

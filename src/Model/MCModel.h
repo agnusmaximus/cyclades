@@ -117,7 +117,7 @@ class MCModel : public Model {
     void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
     }
 
-    void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+    void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
     }
 
     void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {

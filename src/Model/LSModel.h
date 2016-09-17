@@ -130,7 +130,7 @@ class LSModel : public Model {
 	out = 0;
     }
 
-    void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+    void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
 	out[0] = 0;
     }
 

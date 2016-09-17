@@ -144,7 +144,7 @@ class WordEmbeddingsModel : public Model {
     virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
     }
 
-    virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+    virtual void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
     }
 
     virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
