@@ -94,7 +94,8 @@ DEFINE_bool(cyclades_trainer, false, "Cyclades training method (parallel).");
 DEFINE_bool(hogwild_trainer, false, "Hogwild training method (parallel).");
 
 // Flags for updating types.
-DEFINE_bool(sgd, false, "Use the SGD update method.");
+DEFINE_bool(dense_linear_sgd, false, "Use the dense linear SGD update method.");
+DEFINE_bool(sparse_sgd, false, "Use the sparse SGD update method.");
 DEFINE_bool(svrg, false, "Use the SVRG update method.");
 DEFINE_bool(saga, false, "Use the SAGA update method. Note this assumes gradients are sparse.");
 DEFINE_bool(custom, false, "Use the custom update method. This may be useful for implementing more specific tricks and optimizations.");
@@ -116,7 +117,8 @@ DEFINE_double(tune_stepfactor, 10, "Factor to decrease learning_rate when tuning
 DEFINE_int32(random_range, 100, "Range of random numbers for initializing the model.");
 
 #include "Updater/Updater.h"
-#include "Updater/SGDUpdater.h"
+#include "Updater/DenseLinearSGDUpdater.h"
+#include "Updater/SparseSGDUpdater.h"
 #include "Updater/SVRGUpdater.h"
 #include "Updater/SAGAUpdater.h"
 #include "Updater/CustomUpdater.h"

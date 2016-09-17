@@ -56,12 +56,6 @@ class Model {
     virtual void Nu(int coordinate, std::vector<double> &out, std::vector<double> &local_model) = 0;
     virtual void H(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) = 0;
 
-    // Whether the model needs catch up or not. A model needs catch up only if mu or nu not always 0.
-    // Returning false can boost performance.
-    virtual bool NeedCatchUp() {
-	return true;
-    }
-
     // The following methods are for custom gradient creation.
     virtual void CustomCatchUp(int index, int diff) {
 	std::cout << "Model.h: CustomCatchUp is not implemented." << std::endl;

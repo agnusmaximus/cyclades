@@ -138,10 +138,6 @@ class LSModel : public Model {
 	out[0] = -g->coeffs[coordinate];
     }
 
-    virtual bool NeedCatchUp() {
-	return false;
-    }
-
     ~LSModel() {
     }
 };

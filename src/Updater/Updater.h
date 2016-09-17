@@ -68,6 +68,11 @@ protected:
     virtual void PrepareMu(std::vector<int> &coordinates) = 0;
     virtual void PrepareH(Datapoint *datapoint, Gradient *g) = 0;
 
+    // By default need catch up.
+    virtual bool NeedCatchUp() {
+	return true;
+    }
+
     virtual void ApplyGradient(Datapoint *datapoint) {
 	std::vector<double> &model_data = model->ModelData();
 	int coordinate_size = model->CoordinateSize();
@@ -83,7 +88,7 @@ protected:
     }
 
     virtual void CatchUp(int index, int diff) {
-	if (!model->NeedCatchUp()) return;
+	if (!NeedCatchUp()) return;
 	if (diff < 0) diff = 0;
 	double geom_sum = 0;
 	double mu = Mu(index);

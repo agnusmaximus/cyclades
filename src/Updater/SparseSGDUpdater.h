@@ -14,34 +14,27 @@
 *    limitations under the License.
 */
 
-#ifndef _SGD_UPDATER_
-#define _SGD_UPDATER_
+#ifndef _SPARSE_SGD_UPDATER_
+#define _SPARSE_SGD_UPDATER_
 
 #include "Updater.h"
 #include "../Gradient/Gradient.h"
 
-class SGDUpdater : public Updater {
+class SparseSGDUpdater : public Updater {
 protected:
-    REGISTER_THREAD_LOCAL_1D_VECTOR(mu);
-    REGISTER_THREAD_LOCAL_2D_VECTOR(nu);
     REGISTER_THREAD_LOCAL_2D_VECTOR(h);
 
+    // Catch up is not required as mu and nu are 0.
+    virtual bool NeedCatchUp() {
+	return false;
+    }
+
     void PrepareNu(std::vector<int> &coordinates) override {
-	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &nu = GET_THREAD_LOCAL_VECTOR(nu);
-	for (int i = 0; i < coordinates.size(); i++) {
-	    int index = coordinates[i];
-	    model->Nu(index, nu[index], cur_model);
-	}
+	// Nu is 0.
     }
 
     void PrepareMu(std::vector<int> &coordinates) override {
-	std::vector<double> &cur_model = model->ModelData();
-	std::vector<double> &mu = GET_THREAD_LOCAL_VECTOR(mu);
-	for (int i = 0; i < coordinates.size(); i++) {
-	    int index = coordinates[i];
-	    model->Mu(index, mu[index], cur_model);
-	}
+	// Mu is 0.
     }
 
     void PrepareH(Datapoint *datapoint, Gradient *g) override {
@@ -59,21 +52,19 @@ protected:
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
-	return GET_THREAD_LOCAL_VECTOR(nu)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
+	return 0;
     }
 
     double Mu(int coordinate) {
-	return GET_THREAD_LOCAL_VECTOR(mu)[coordinate] * FLAGS_learning_rate;
+	return 0;
     }
 
  public:
-    SGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	INITIALIZE_THREAD_LOCAL_1D_VECTOR(mu, model->NumParameters());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(nu, model->NumParameters(), model->CoordinateSize());
+    SparseSGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h, model->NumParameters(), model->CoordinateSize());
     }
 
-    ~SGDUpdater() {
+    ~SparseSGDUpdater() {
     }
 };
 

@@ -36,8 +36,11 @@ TrainStatistics RunOnce() {
 
     // Create updater.
     Updater *updater = NULL;
-    if (FLAGS_sgd) {
-	updater = new SGDUpdater(model, datapoints);
+    if (FLAGS_dense_linear_sgd) {
+	updater = new DenseLinearSGDUpdater(model, datapoints);
+    }
+    else if (FLAGS_sparse_sgd) {
+	updater = new SparseSGDUpdater(model, datapoints);
     }
     else if (FLAGS_svrg) {
 	updater = new SVRGUpdater(model, datapoints);

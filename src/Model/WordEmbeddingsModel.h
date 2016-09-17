@@ -154,10 +154,6 @@ class WordEmbeddingsModel : public Model {
 	    out[i] = (2 * g->coeffs[0] * (local_model[c1*w2v_length+i] + local_model[c2*w2v_length+i]));
 	}
     }
-
-    virtual bool NeedCatchUp() {
-	return false;
-    }
 };
 
 
