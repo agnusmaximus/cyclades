@@ -64,7 +64,10 @@ class DFSCachePartitioner : public Partitioner {
 	dfs_stack.reserve(n_nodes);
 	std::vector<char> visited(n_nodes);
 	std::fill(visited.begin(), visited.end(), 0);
-	dfs_stack.push_back(datapoints[0]->GetOrder());
+	for (int i = 0; i < datapoints.size(); i++) {
+	  dfs_stack.push_back(datapoints[i]->GetOrder());
+	}
+	int n_datapoints_added = 0;
 	while (!dfs_stack.empty()) {
 	    int cur_node = dfs_stack[dfs_stack.size()-1];
 	    dfs_stack.pop_back();
@@ -75,11 +78,18 @@ class DFSCachePartitioner : public Partitioner {
 	    if (cur_node < n_datapoints) {
 		int cur_assigned_thread = n_nodes_processed_so_far++ / n_points_per_thread;
 		partitions.AddDatapointToThread(datapoints[cur_node], cur_assigned_thread);
+		n_datapoints_added++;
 	    }
 	    for (auto const & neighbor : graph[cur_node]) {
 		dfs_stack.push_back(neighbor);
 	    }
 	}
+
+	if (n_datapoints_added != datapoints.size()) {
+  	    std::cout << "DFSCachePartitioner.h: Error, datapoints don't add up - " << n_datapoints_added << " - " << datapoints.size() << std::endl;
+	    exit(0);
+	}
+	    
 	return partitions;
     }
 };
