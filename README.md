@@ -61,13 +61,13 @@ For full experiment details please refer to the paper.
      Additionally, on a Mac, [Xcode Command Line Tools](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/) and [ClangOMP++](https://clang-omp.github.io/) are required.
 </em>
 
-After cloning the repository, fetch the gflags submodule with
-```c++
-git submodule init && git submodule update
-```
-cd into the project directory
+After cloning the repository, cd into the project directory
 ```c++
 cd cyclades
+```
+Fetch the gflags submodule with
+```c++
+git submodule init && git submodule update
 ```
 After the submodule fetches use cmake to generate a build file.
 
