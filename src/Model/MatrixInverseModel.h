@@ -210,7 +210,7 @@ public:
 	}
     }
 
-    void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
+    void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
 	out = lambda / (double)n_coords;
     }
 

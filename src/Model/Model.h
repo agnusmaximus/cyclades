@@ -52,7 +52,7 @@ class Model {
     // x_j = (1 - mu_j)x_j - nu_j + h_ij(x_S_i)
     // Where h_ij(x) = 0 for j not in S_i.
     virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) = 0;
-    virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) = 0;
+    virtual void Lambda(int coordinate, double &out, std::vector<double> &local_model) = 0;
     virtual void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) = 0;
     virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) = 0;
 

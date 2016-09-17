@@ -40,7 +40,7 @@ protected:
 	std::vector<double> &mu = GET_THREAD_LOCAL_VECTOR(mu);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
-	    model->Mu(index, mu[index], cur_model);
+	    model->Lambda(index, mu[index], cur_model);
 	}
     }
 

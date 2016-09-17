@@ -42,7 +42,7 @@ protected:
 	std::vector<double> &lambda = GET_THREAD_LOCAL_VECTOR(lambda);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
-	    model->Mu(index, lambda[index], cur_model);
+	    model->Lambda(index, lambda[index], cur_model);
 	}
     }
 
@@ -101,7 +101,7 @@ protected:
 	    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
 	    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
 	    model->Kappa(coordinate, g_nu[coordinate], model_copy);
-	    model->Mu(coordinate, g_mu[coordinate], model_copy);
+	    model->Lambda(coordinate, g_mu[coordinate], model_copy);
 	    for (int j = 0; j < coord_size; j++) {
 		g[coordinate*coord_size+j] = (g_mu[coordinate] * model_copy[coordinate*coord_size+j] - g_nu[coordinate][j]) * n_zeroes[coordinate];
 	    }
@@ -123,7 +123,7 @@ protected:
 		    std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
 		    for (auto & coord : datapoint->GetCoordinates()) {
 			model->H_bar(coord, g_h[coord], grad, model_copy);
-			model->Mu(coord, g_mu[coord], model_copy);
+			model->Lambda(coord, g_mu[coord], model_copy);
 			model->Kappa(coord, g_nu[coord], model_copy);
 		    }
 		    for (auto & coord : datapoint->GetCoordinates()) {

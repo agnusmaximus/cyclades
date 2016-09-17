@@ -114,7 +114,7 @@ class MCModel : public Model {
 	g->coeffs[0] = coeff;
     }
 
-    void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
+    void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
     }
 
     void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {

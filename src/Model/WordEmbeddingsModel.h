@@ -141,7 +141,7 @@ class WordEmbeddingsModel : public Model {
 	c_sum_mult2[omp_get_thread_num()] += weight;
     }
 
-    virtual void Mu(int coordinate, double &out, std::vector<double> &local_model) override {
+    virtual void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
     }
 
     virtual void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
