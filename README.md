@@ -57,7 +57,7 @@ Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 For full experiment details please refer to the paper.
 
 # Building
-<em> Note that compilation requires [git](https://git-scm.com/), [make](https://www.gnu.org/software/make/), [cmake](https://cmake.org/), [OpenMP](http://openmp.org/wp/), [wget](https://www.gnu.org/software/wget/).
+<em> Note that compilation requires [git](https://git-scm.com/), [make](https://www.gnu.org/software/make/), [cmake](https://cmake.org/), [OpenMP](http://openmp.org/wp/), and [wget](https://www.gnu.org/software/wget/).
      Additionally, on a Mac, [Xcode Command Line Tools](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/) and [ClangOMP++](https://clang-omp.github.io/) are required.
 </em>
 
@@ -69,9 +69,14 @@ cd into the project directory
 ```c++
 cd cyclades
 ```
-After the submodule fetches use cmake to generate a build file
+After the submodule fetches use cmake to generate a build file.
+On Linux do
 ```c++
 cmake .
+```
+On Mac Os X do
+```c++
+cmake -DCMAKE_CXX_COMPILER=clang-omp++ .
 ```
 Then make to compile
 ```c++
