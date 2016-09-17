@@ -22,55 +22,55 @@
 
 class DenseLinearSGDUpdater : public Updater {
 protected:
-    REGISTER_THREAD_LOCAL_1D_VECTOR(mu);
-    REGISTER_THREAD_LOCAL_2D_VECTOR(nu);
-    REGISTER_THREAD_LOCAL_2D_VECTOR(h);
+    REGISTER_THREAD_LOCAL_1D_VECTOR(lambda);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(kappa);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(h_bar);
 
     void PrepareNu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &nu = GET_THREAD_LOCAL_VECTOR(nu);
+	std::vector<std::vector<double> > &kappa = GET_THREAD_LOCAL_VECTOR(kappa);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
-	    model->Kappa(index, nu[index], cur_model);
+	    model->Kappa(index, kappa[index], cur_model);
 	}
     }
 
     void PrepareMu(std::vector<int> &coordinates) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<double> &mu = GET_THREAD_LOCAL_VECTOR(mu);
+	std::vector<double> &lambda = GET_THREAD_LOCAL_VECTOR(lambda);
 	for (int i = 0; i < coordinates.size(); i++) {
 	    int index = coordinates[i];
-	    model->Lambda(index, mu[index], cur_model);
+	    model->Lambda(index, lambda[index], cur_model);
 	}
     }
 
     void PrepareH(Datapoint *datapoint, Gradient *g) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &h = GET_THREAD_LOCAL_VECTOR(h);
+	std::vector<std::vector<double> > &h_bar = GET_THREAD_LOCAL_VECTOR(h_bar);
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->H_bar(index, h[index], g, cur_model);
+	    model->H_bar(index, h_bar[index], g, cur_model);
 	}
     }
 
     double H(int coordinate, int index_into_coordinate_vector) {
-	return -GET_THREAD_LOCAL_VECTOR(h)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
+	return -GET_THREAD_LOCAL_VECTOR(h_bar)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
-	return -GET_THREAD_LOCAL_VECTOR(nu)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
+	return -GET_THREAD_LOCAL_VECTOR(kappa)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
     double Mu(int coordinate) {
-	return GET_THREAD_LOCAL_VECTOR(mu)[coordinate] * FLAGS_learning_rate;
+	return GET_THREAD_LOCAL_VECTOR(lambda)[coordinate] * FLAGS_learning_rate;
     }
 
  public:
     DenseLinearSGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	INITIALIZE_THREAD_LOCAL_1D_VECTOR(mu, model->NumParameters());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(nu, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(lambda, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(kappa, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_bar, model->NumParameters(), model->CoordinateSize());
     }
 
     ~DenseLinearSGDUpdater() {

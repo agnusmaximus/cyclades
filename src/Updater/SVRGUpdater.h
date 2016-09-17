@@ -32,9 +32,9 @@ protected:
     REGISTER_GLOBAL_1D_VECTOR(g);
 
     // Vectors for computing the sum of gradients (g).
-    REGISTER_THREAD_LOCAL_2D_VECTOR(g_nu);
-    REGISTER_THREAD_LOCAL_1D_VECTOR(g_mu);
-    REGISTER_THREAD_LOCAL_2D_VECTOR(g_h);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(g_kappa);
+    REGISTER_THREAD_LOCAL_1D_VECTOR(g_lambda);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(g_h_bar);
     REGISTER_GLOBAL_1D_VECTOR(n_zeroes);
 
     void PrepareMu(std::vector<int> &coordinates) override {
@@ -98,12 +98,12 @@ protected:
 	// zero gradients.
 #pragma omp parallel for num_threads(FLAGS_n_threads)
 	for (int coordinate = 0; coordinate < model->NumParameters(); coordinate++) {
-	    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
-	    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
-	    model->Kappa(coordinate, g_nu[coordinate], model_copy);
-	    model->Lambda(coordinate, g_mu[coordinate], model_copy);
+	    std::vector<std::vector<double> > &g_kappa = GET_THREAD_LOCAL_VECTOR(g_kappa);
+	    std::vector<double> &g_lambda = GET_THREAD_LOCAL_VECTOR(g_lambda);
+	    model->Kappa(coordinate, g_kappa[coordinate], model_copy);
+	    model->Lambda(coordinate, g_lambda[coordinate], model_copy);
 	    for (int j = 0; j < coord_size; j++) {
-		g[coordinate*coord_size+j] = (g_mu[coordinate] * model_copy[coordinate*coord_size+j] - g_nu[coordinate][j]) * n_zeroes[coordinate];
+		g[coordinate*coord_size+j] = (g_lambda[coordinate] * model_copy[coordinate*coord_size+j] - g_kappa[coordinate][j]) * n_zeroes[coordinate];
 	    }
 	}
 
@@ -118,18 +118,18 @@ protected:
 		    Gradient *grad = &thread_gradients[omp_get_thread_num()];
 		    grad->datapoint = datapoint;
 		    model->PrecomputeCoefficients(datapoint, grad, model_copy);
-		    std::vector<std::vector<double> > &g_nu = GET_THREAD_LOCAL_VECTOR(g_nu);
-		    std::vector<double> &g_mu = GET_THREAD_LOCAL_VECTOR(g_mu);
-		    std::vector<std::vector<double> > &g_h = GET_THREAD_LOCAL_VECTOR(g_h);
+		    std::vector<std::vector<double> > &g_kappa = GET_THREAD_LOCAL_VECTOR(g_kappa);
+		    std::vector<double> &g_lambda = GET_THREAD_LOCAL_VECTOR(g_lambda);
+		    std::vector<std::vector<double> > &g_h_bar = GET_THREAD_LOCAL_VECTOR(g_h_bar);
 		    for (auto & coord : datapoint->GetCoordinates()) {
-			model->H_bar(coord, g_h[coord], grad, model_copy);
-			model->Lambda(coord, g_mu[coord], model_copy);
-			model->Kappa(coord, g_nu[coord], model_copy);
+			model->H_bar(coord, g_h_bar[coord], grad, model_copy);
+			model->Lambda(coord, g_lambda[coord], model_copy);
+			model->Kappa(coord, g_kappa[coord], model_copy);
 		    }
 		    for (auto & coord : datapoint->GetCoordinates()) {
 			for (int j = 0; j < coord_size; j++) {
-			    g[coord*coord_size+j] += g_mu[coord] * model_copy[coord*coord_size+j]
-				- g_nu[coord][j] + g_h[coord][j];
+			    g[coord*coord_size+j] += g_lambda[coord] * model_copy[coord*coord_size+j]
+				- g_kappa[coord][j] + g_h_bar[coord][j];
 			}
 		    }
 		}
@@ -151,9 +151,9 @@ protected:
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_x, model->NumParameters(), model->CoordinateSize());
 	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_y, model->NumParameters(), model->CoordinateSize());
 	model_copy.resize(model->ModelData().size());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_nu, model->NumParameters(), model->CoordinateSize());
-	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_mu, model->NumParameters());
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_kappa, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_1D_VECTOR(g_lambda, model->NumParameters());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(g_h_bar, model->NumParameters(), model->CoordinateSize());
 
 	// Compute number of zeroes for each column (parameters) of the model.
 	INITIALIZE_GLOBAL_1D_VECTOR(n_zeroes, model->NumParameters());

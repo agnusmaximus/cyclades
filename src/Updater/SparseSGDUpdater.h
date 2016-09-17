@@ -22,7 +22,7 @@
 
 class SparseSGDUpdater : public Updater {
 protected:
-    REGISTER_THREAD_LOCAL_2D_VECTOR(h);
+    REGISTER_THREAD_LOCAL_2D_VECTOR(h_bar);
 
     // Catch up is not required as mu and nu are 0.
     virtual bool NeedCatchUp() {
@@ -39,16 +39,16 @@ protected:
 
     void PrepareH(Datapoint *datapoint, Gradient *g) override {
 	std::vector<double> &cur_model = model->ModelData();
-	std::vector<std::vector<double> > &h = GET_THREAD_LOCAL_VECTOR(h);
+	std::vector<std::vector<double> > &h_bar = GET_THREAD_LOCAL_VECTOR(h_bar);
 	model->PrecomputeCoefficients(datapoint, g, cur_model);
 	for (int i = 0; i < datapoint->GetCoordinates().size(); i++) {
 	    int index = datapoint->GetCoordinates()[i];
-	    model->H_bar(index, h[index], g, cur_model);
+	    model->H_bar(index, h_bar[index], g, cur_model);
 	}
     }
 
     double H(int coordinate, int index_into_coordinate_vector) {
-	return -GET_THREAD_LOCAL_VECTOR(h)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
+	return -GET_THREAD_LOCAL_VECTOR(h_bar)[coordinate][index_into_coordinate_vector] * FLAGS_learning_rate;
     }
 
     double Nu(int coordinate, int index_into_coordinate_vector) {
@@ -61,7 +61,7 @@ protected:
 
  public:
     SparseSGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
-	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h, model->NumParameters(), model->CoordinateSize());
+	INITIALIZE_THREAD_LOCAL_2D_VECTOR(h_bar, model->NumParameters(), model->CoordinateSize());
     }
 
     ~SparseSGDUpdater() {
