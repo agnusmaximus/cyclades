@@ -1,2 +1,0 @@
-./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=3e-14  -least_squares  -cyclades_trainer  -cyclades_batch_size=200 -n_epochs=10 -sgd, Cyclades 2 Threads lr=3e-14, red, solid
-./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-14  -least_squares  -hogwild_trainer  -cyclades_batch_size=200 -n_epochs=10 -sgd, Hogwild! 2 Threads lr=1e-14, blue, solid
