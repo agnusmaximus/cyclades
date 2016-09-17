@@ -63,9 +63,13 @@ After cloning the repository, fetch the gflags submodule with
 ```c++
 git submodule init && git submodule update
 ```
+cd into the project directory
+```c++
+cd cyclades
+```
 After the submodule fetches use cmake to generate a build file
 ```c++
-mkdir build && cmake ..
+mkdir build && cd build && cmake ..
 ```
 Then make to compile
 ```c++
