@@ -88,6 +88,9 @@ DEFINE_double(learning_rate, .001, "Learning rate.");
 DEFINE_bool(print_loss_per_epoch, false, "Should compute and print loss every epoch.");
 DEFINE_bool(print_partition_time, false, "Should print time taken to distribute datapoints across threads.");
 
+
+DEFINE_bool(shuffle_datapoints, true, "Shuffle datapoints before training.");
+
 // Flags for training types.
 DEFINE_bool(cache_efficient_hogwild_trainer, false, "Hogwild training method with cache friendly datapoint ordering (parallel).");
 DEFINE_bool(cyclades_trainer, false, "Cyclades training method (parallel).");
