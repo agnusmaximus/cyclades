@@ -65,7 +65,7 @@ if n_rows != n_cols:
     print("Must be square!")
     sys.exit(0)
 
-visualize(all_values, n_rows)
+#visualize(all_values, n_rows)
 
 new_values = []
 for value in all_values:
@@ -75,7 +75,7 @@ for value in all_values:
             dup_values.append((value[0] + i * n_rows, value[1] + j * n_rows, value[2]))
     new_values += dup_values
 
-visualize(new_values, n_rows * n)
+#visualize(new_values, n_rows * n)
 
 print("%d %d %d" % (n_rows * n, n_cols * n, n_entries * n * n), file=f_out)
 for value in new_values:
