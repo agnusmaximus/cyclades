@@ -17,7 +17,12 @@
 #define _GREEDY_PARTITIONER_
 
 #include <unordered_map>
+#include <vector>
+
 #include "Partitioner.h"
+
+DEFINE_bool(greedy_naive_exact, false, "Use the O(kn^2) exact greedy algorithm.");
+DEFINE_bool(greedy_lsh_approximate, true, "Use hamming distance locality sensitive hashing approximate greedy method.");
 
 class GreedyCachePartitioner : public Partitioner {
  protected:
@@ -51,18 +56,8 @@ class GreedyCachePartitioner : public Partitioner {
 	max_overlap = best_overlap;
 	index_of_result = best_index;
     }
- public:
-    GreedyCachePartitioner() {};
-    ~GreedyCachePartitioner() {};
 
-    // Assumptions: datapoints orders (id) are continuous and in order.
-    DatapointPartitions Partition(const std::vector<Datapoint *> &datapoints, int n_threads) {
-	// This only works for 1 thread for now!
-	if (FLAGS_n_threads > 1) {
-	    std::cout << "GreedyCachePartitioner.h: Only 1 threaded is valid for now." << std::endl;
-	    exit(0);
-	}
-
+    DatapointPartitions NaiveExact(const std::vector<Datapoint *> &datapoints, int n_threads) {
 	// Keep track of a map of distinct coordinate accesses accessed by datapoint.
 	std::vector<std::unordered_map<int, bool> > datapoint_coordinate_accesses(datapoints.size());
 	for (int i = 0; i < datapoints.size(); i++) {
@@ -117,6 +112,106 @@ class GreedyCachePartitioner : public Partitioner {
 	}
 
 	return partitions;
+    }
+
+    DatapointPartitions LSHApproximate(const std::vector<Datapoint *> &datapoints, int n_threads) {
+
+	// Construct a hash table for datapoints for hamming distance.
+	std::unordered_map<int, std::set<Datapoint *> > h_table;
+	for (const auto & datapoint : datapoints) {
+	    int hash = datapoint->GetCoordinates()[rand() % datapoint->GetCoordinates().size()];
+	    h_table[hash].insert(datapoint);
+	}
+
+	// Construct maps for every datapoint.
+	std::vector<std::unordered_map<int, bool> > datapoint_coordinate_accesses(datapoints.size());
+	for (int i = 0; i < datapoints.size(); i++) {
+	    datapoints[i]->SetOrder(i);
+	    for (const auto &coordinate : datapoints[i]->GetCoordinates()) {
+		datapoint_coordinate_accesses[i][coordinate] = 1;
+	    }
+	}
+
+	// Construct a map for every available datapoint index.
+	std::set<int> available;
+	for (int i = 0; i < datapoints.size(); i++) {
+	    available.insert(i);
+	}
+
+	int retry_limit = 100;
+
+	// Do greedy algorithm with a random starting point;
+	std::vector<Datapoint *> permutation(datapoints.size());
+	for (int i = 0; i < datapoints.size(); i++) {
+	    Datapoint *cur = NULL, *next = NULL;
+	    int best_overlap = -1;
+	    int n_tries = 0;
+	    int coordinate_index = 0;
+	    if (i != 0) {
+		cur = permutation[i-1];
+		//while (next == NULL) {
+		for (int j = 0; j < retry_limit; j++) {
+		    int hash = cur->GetCoordinates()[coordinate_index++];
+		    if (h_table.find(hash) != h_table.end()) {
+			for (const auto & similar_datapoint : h_table[hash]) {
+			    int overlap = CalculateOverlap(datapoint_coordinate_accesses[cur->GetOrder()],
+							   similar_datapoint);
+			    if (overlap > best_overlap) {
+				next = similar_datapoint;
+				best_overlap = overlap;
+			    }
+			}
+			if (next != NULL) {
+			    h_table[hash].erase(next);
+			}
+			else {
+			    if (n_tries++ > retry_limit) {
+				break;
+			    }
+			}
+		    }
+		}
+	    }
+	    if (next == NULL) {
+		next = datapoints[*available.begin()];
+	    }
+	    permutation[i] = next;
+	    available.erase(next->GetOrder());
+	}
+
+	// Distribute permutation.
+	int n_datapoints = datapoints.size();
+	DatapointPartitions partitions(n_threads);
+
+	for (int i = 0; i < datapoints.size(); i++) {
+	    partitions.AddDatapointToThread(permutation[i], 0);
+	}
+
+	return partitions;
+    }
+
+ public:
+    GreedyCachePartitioner() {};
+    ~GreedyCachePartitioner() {};
+
+    // Assumptions: datapoints orders (id) are continuous and in order.
+    DatapointPartitions Partition(const std::vector<Datapoint *> &datapoints, int n_threads) {
+	// This only works for 1 thread for now!
+	if (FLAGS_n_threads > 1) {
+	    std::cout << "GreedyCachePartitioner.h: Only 1 threaded is valid for now." << std::endl;
+	    exit(0);
+	}
+
+	if (FLAGS_greedy_naive_exact) {
+	    return NaiveExact(datapoints, n_threads);
+	}
+	else if (FLAGS_greedy_lsh_approximate) {
+	    return LSHApproximate(datapoints, n_threads);
+	}
+	else {
+	    std::cout << "GreedyCachePartitioner.h: No greedy method chosen." << std::endl;
+	    exit(0);
+	}
     }
 };
 

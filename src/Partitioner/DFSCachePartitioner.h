@@ -39,6 +39,7 @@ class DFSCachePartitioner : public Partitioner {
 		n_nodes = fmax(n_nodes, coordinate_id);
 	    }
 	}
+	n_nodes++;
 	avg_n_neighbors /= n_datapoints;
 
 	// Create the graph.
@@ -65,8 +66,9 @@ class DFSCachePartitioner : public Partitioner {
 	std::vector<char> visited(n_nodes);
 	std::fill(visited.begin(), visited.end(), 0);
 	for (int i = 0; i < datapoints.size(); i++) {
-	  dfs_stack.push_back(datapoints[i]->GetOrder());
+	    dfs_stack.push_back(datapoints[i]->GetOrder()-1);
 	}
+
 	int n_datapoints_added = 0;
 	while (!dfs_stack.empty()) {
 	    int cur_node = dfs_stack[dfs_stack.size()-1];
@@ -89,7 +91,7 @@ class DFSCachePartitioner : public Partitioner {
   	    std::cout << "DFSCachePartitioner.h: Error, datapoints don't add up - " << n_datapoints_added << " - " << datapoints.size() << std::endl;
 	    exit(0);
 	}
-	    
+
 	return partitions;
     }
 };
