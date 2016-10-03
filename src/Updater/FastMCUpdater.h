@@ -21,7 +21,7 @@
 #include "../Gradient/Gradient.h"
 
 // Fast matrix completion SGD updater.
-class FastMCSGDUpdater : public Updater {
+class FastMCSGDUpdater : public SparseSGDUpdater {
 protected:
 
     void PrepareNu(std::vector<int> &coordinates) override {
@@ -103,7 +103,7 @@ protected:
     }
 
  public:
-    FastMCSGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : Updater(model, datapoints) {
+    FastMCSGDUpdater(Model *model, std::vector<Datapoint *> &datapoints) : SparseSGDUpdater(model, datapoints) {
     }
 
     ~FastMCSGDUpdater() {
