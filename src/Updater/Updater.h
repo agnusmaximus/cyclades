@@ -20,7 +20,7 @@
 #include "../DatapointPartitions/DatapointPartitions.h"
 #include "../Gradient/Gradient.h"
 
-// Some ugly macros to declare extra thread-local / global 1d/2d vectors.
+// Some macros to declare extra thread-local / global 1d/2d vectors.
 // This avoids the use of std::maps, which are very inefficient.
 // Gives around a 2-3x speedup over using maps.
 #define REGISTER_THREAD_LOCAL_1D_VECTOR(NAME) std::vector<std::vector<double> > NAME ## _LOCAL_
