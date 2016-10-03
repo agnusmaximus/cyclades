@@ -24,31 +24,6 @@
 class FastMCSGDUpdater : public SparseSGDUpdater {
 protected:
 
-    void PrepareNu(std::vector<int> &coordinates) override {
-    }
-
-    void PrepareMu(std::vector<int> &coordinates) override {
-    }
-
-    void PrepareH(Datapoint *datapoint, Gradient *g) override {
-    }
-
-    double H(int coordinate, int index_into_coordinate_vector) {
-	return 0;
-    }
-
-    double Nu(int coordinate, int index_into_coordinate_vector) {
-	return 0;
-    }
-
-    double Mu(int coordinate) {
-	return 0;
-    }
-
-    void CatchUp(int index, int diff) override {
-
-    }
-
     void PrepareMCGradient(Datapoint *datapoint, Gradient *g) {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
