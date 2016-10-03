@@ -101,7 +101,9 @@ DEFINE_bool(dense_linear_sgd, false, "Use the dense linear SGD update method.");
 DEFINE_bool(sparse_sgd, false, "Use the sparse SGD update method.");
 DEFINE_bool(svrg, false, "Use the SVRG update method.");
 DEFINE_bool(saga, false, "Use the SAGA update method. Note this assumes gradients are sparse.");
-DEFINE_bool(custom, false, "Use the custom update method. This may be useful for implementing more specific tricks and optimizations.");
+
+// Custom updaters
+DEFINE_bool(fast_mc_sgd, false, "Fast custom SGD updater for matrix completion.");
 
 // Flags for application types.
 DEFINE_bool(matrix_completion, false, "Matrix completion application type.");
@@ -124,7 +126,7 @@ DEFINE_int32(random_range, 100, "Range of random numbers for initializing the mo
 #include "Updater/SparseSGDUpdater.h"
 #include "Updater/SVRGUpdater.h"
 #include "Updater/SAGAUpdater.h"
-#include "Updater/CustomUpdater.h"
+#include "Updater/FastMCUpdater.h"
 
 #include "Partitioner/CycladesPartitioner.h"
 #include "Partitioner/DFSCachePartitioner.h"

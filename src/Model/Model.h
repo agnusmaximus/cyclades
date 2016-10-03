@@ -55,22 +55,6 @@ class Model {
     virtual void Lambda(int coordinate, double &out, std::vector<double> &local_model) = 0;
     virtual void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) = 0;
     virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) = 0;
-
-    // The following methods are for custom gradient creation.
-    virtual void CustomCatchUp(int index, int diff) {
-	std::cout << "Model.h: CustomCatchUp is not implemented." << std::endl;
-	exit(0);
-    }
-
-    virtual void CustomPrepareGradient(Datapoint *datapoint, Gradient *gradient) {
-	std::cout << "Model.h: CustomPrepareGradient is not implemented." << std::endl;
-	exit(0);
-    }
-
-    virtual void CustomApplyGradient(Datapoint *datapoint, Gradient *gradient) {
-	std::cout << "Model.h: CustomApplyGradient is not implemented." << std::endl;
-	exit(0);
-    }
 };
 
 #endif

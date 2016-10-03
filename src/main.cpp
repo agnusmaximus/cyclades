@@ -50,8 +50,8 @@ TrainStatistics RunOnce() {
     else if (FLAGS_saga) {
 	updater = new SAGAUpdater(model, datapoints);
     }
-    else if (FLAGS_custom) {
-	updater = new CustomUpdater(model, datapoints);
+    else if (FLAGS_fast_mc_sgd) {
+	updater = new FastMCSGDUpdater(model, datapoints);
     }
     if (!updater) {
 	std::cerr << "Main: updater class not chosen." << std::endl;
@@ -143,7 +143,4 @@ int main(int argc, char **argv) {
     else if (FLAGS_least_squares) {
 	Run<LSModel, LSDatapoint>();
     }
-    /*else if (FLAGS_ising_gibbs) {
-	Run<IsingGibbsModel, GibbsDatapoint>();
-	}*/
 }

@@ -130,34 +130,6 @@ class MCModel : public Model {
 	    out[i] = g->coeffs[0] * local_model[other_coordinate * rlength + i];
 	}
     }
-
-    //
-    // The following code is custom performance optimization for use with the custom updater.
-    //
-    void CustomCatchUp(int index, int diff) override {
-	return;
-    }
-
-    void CustomPrepareGradient(Datapoint *datapoint, Gradient *gradient) override {
-	PrecomputeCoefficients(datapoint, gradient, model);
-    }
-
-    void CustomApplyGradient(Datapoint *datapoint, Gradient *gradient) override {
-	// Custom SGD. This is fast because it avoids intermediate writes to memory,
-	// and simply updates the model directly and simultaneously.
-	double gradient_coefficient = gradient->coeffs[0];
-	const std::vector<int> &coordinates = datapoint->GetCoordinates();
-	int user_coordinate = coordinates[0];
-	int movie_coordinate = coordinates[1];
-	for (int i = 0; i < rlength; i++) {
-	    double new_user_value = model[user_coordinate*rlength+i] -
-		FLAGS_learning_rate * gradient_coefficient * model[movie_coordinate*rlength+i];
-	    double new_movie_value = model[movie_coordinate*rlength+i] -
-		FLAGS_learning_rate * gradient_coefficient * model[user_coordinate*rlength+i];
-	    model[user_coordinate*rlength+i] = new_user_value;
-	    model[movie_coordinate*rlength+i] = new_movie_value;
-	}
-    }
 };
 
 #endif
