@@ -102,21 +102,13 @@ DEFINE_bool(sparse_sgd, false, "Use the sparse SGD update method.");
 DEFINE_bool(svrg, false, "Use the SVRG update method.");
 DEFINE_bool(saga, false, "Use the SAGA update method. Note this assumes gradients are sparse.");
 
-// Custom updaters
-DEFINE_bool(fast_mc_sgd, false, "Fast custom SGD updater for matrix completion.");
-
 // Flags for application types.
 DEFINE_bool(matrix_completion, false, "Matrix completion application type.");
+DEFINE_bool(fast_matrix_completion, false, "Matrix completion with custom sgd updater. Do not specify an extra updater (e.g: don't specify --sparse_sgd, etc)");
 DEFINE_bool(dense_least_squares, false, "Dense least squares application type.");
 DEFINE_bool(word_embeddings, false, "W2V application type.");
 DEFINE_bool(matrix_inverse, false, "Matrix inverse application type.");
 DEFINE_bool(least_squares, false, "Sparse least squares application type.");
-
-// Flag for tuning learning rate.
-DEFINE_bool(tune_learning_rate, false, "Tune learning rate for given problem.");
-DEFINE_double(tune_lr_lower_bound, 1e-20, "Lower bound for tuning learning rate.");
-DEFINE_double(tune_lr_upper_bound, 10, "Upper bound for tuning learning rate.");
-DEFINE_double(tune_stepfactor, 10, "Factor to decrease learning_rate when tuning learning rate.");
 
 // MISC flags.
 DEFINE_int32(random_range, 100, "Range of random numbers for initializing the model.");

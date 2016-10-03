@@ -20,7 +20,7 @@
 #include "defines.h"
 #include <iomanip>
 
-template<class MODEL_CLASS, class DATAPOINT_CLASS>
+template<class MODEL_CLASS, class DATAPOINT_CLASS, class CUSTOM_UPDATER=SparseSGDUpdater, class CUSTOM_TRAINER=CycladesTrainer>
 TrainStatistics RunOnce() {
     // Initialize model and datapoints.
     Model *model;
@@ -50,12 +50,8 @@ TrainStatistics RunOnce() {
     else if (FLAGS_saga) {
 	updater = new SAGAUpdater(model, datapoints);
     }
-    else if (FLAGS_fast_mc_sgd) {
-	updater = new FastMCSGDUpdater(model, datapoints);
-    }
-    if (!updater) {
-	std::cerr << "Main: updater class not chosen." << std::endl;
-	exit(0);
+    else {
+	updater = new CUSTOM_UPDATER(model, datapoints);
     }
 
     // Create trainer depending on flag.
@@ -63,15 +59,14 @@ TrainStatistics RunOnce() {
     if (FLAGS_cache_efficient_hogwild_trainer) {
 	trainer = new CacheEfficientHogwildTrainer();
     }
-    if (FLAGS_cyclades_trainer) {
+    else if (FLAGS_cyclades_trainer) {
 	trainer = new CycladesTrainer();
     }
     else if (FLAGS_hogwild_trainer) {
 	trainer = new HogwildTrainer();
     }
-    if (!trainer) {
-	std::cerr << "Main: training method not chosen." << std::endl;
-	exit(0);
+    else {
+	trainer = new CUSTOM_TRAINER();
     }
 
     TrainStatistics stats = trainer->Train(model, datapoints, updater);
@@ -89,44 +84,9 @@ TrainStatistics RunOnce() {
     return stats;
 }
 
-// Method to tune the learning rate.
-template<class MODEL_CLASS, class DATAPOINT_CLASS>
-void TuneLearningRate() {
-
-    double best_stepsize = -1;
-    double best_score = DBL_MAX;
-
-    for (double cur_stepsize = FLAGS_tune_lr_upper_bound; cur_stepsize >= FLAGS_tune_lr_lower_bound; cur_stepsize /= FLAGS_tune_stepfactor) {
-	FLAGS_learning_rate = cur_stepsize;
-	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
-	std::cout << "Trainer: (learning_rate: " << cur_stepsize << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
-	if (cur_stats.losses[cur_stats.losses.size()-1] < best_score) {
-	    best_score = cur_stats.losses[cur_stats.losses.size()-1];
-	    best_stepsize = cur_stepsize;
-	}
-    }
-    double increment = (best_stepsize * FLAGS_tune_stepfactor - best_stepsize / FLAGS_tune_stepfactor) / FLAGS_tune_stepfactor;
-    for (double cur_learning_rate = best_stepsize / FLAGS_tune_stepfactor; cur_learning_rate < best_stepsize * FLAGS_tune_stepfactor; cur_learning_rate += increment) {
-	FLAGS_learning_rate = cur_learning_rate;
-	TrainStatistics cur_stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
-	std::cout << "Trainer: (learning_rate: " << cur_learning_rate << ") Loss from " << cur_stats.losses[0] << " -> " << cur_stats.losses[cur_stats.losses.size()-1] << std::endl;
-	if (cur_stats.losses[cur_stats.losses.size()-1] < best_score) {
-	    best_score = cur_stats.losses[cur_stats.losses.size()-1];
-	    best_stepsize = cur_learning_rate;
-	}
-    }
-    std::cout << "Best stepsize: " << best_stepsize << " Lowest loss: " << best_score << std::endl;
-}
-
-template<class MODEL_CLASS, class DATAPOINT_CLASS>
+template<class MODEL_CLASS, class DATAPOINT_CLASS, class CUSTOM_UPDATER=SparseSGDUpdater, class CUSTOM_TRAINER=CycladesTrainer>
 void Run() {
-    if (!FLAGS_tune_learning_rate) {
-	TrainStatistics stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS>();
-    }
-    else {
-	// Tune the learning rate.
-	TuneLearningRate<MODEL_CLASS, DATAPOINT_CLASS>();
-    }
+    TrainStatistics stats = RunOnce<MODEL_CLASS, DATAPOINT_CLASS, CUSTOM_UPDATER, CUSTOM_TRAINER>();
 }
 
 int main(int argc, char **argv) {
@@ -142,5 +102,8 @@ int main(int argc, char **argv) {
     }
     else if (FLAGS_least_squares) {
 	Run<LSModel, LSDatapoint>();
+    }
+    else if (FLAGS_fast_matrix_completion) {
+	Run<MCModel, MCDatapoint, FastMCSGDUpdater>();
     }
 }
