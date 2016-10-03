@@ -133,7 +133,6 @@ public:
 	thread_gradients = new Gradient[FLAGS_n_threads];
 	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
 	    thread_gradients[thread] = Gradient();
-	    thread_gradients[thread].SetUp(model);
 	}
 	this->model = model;
 

@@ -36,10 +36,6 @@ class Gradient {
     virtual void Clear() {
 	datapoint = NULL;
     }
-
-    void SetUp(Model *model) {
-
-    }
 };
 
 #endif
