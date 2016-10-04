@@ -181,14 +181,12 @@ public:
 
     // Called before epoch begins.
     virtual void EpochBegin() {
-	model->EpochBegin();
     }
 
     // Called when the epoch ends.
     virtual void EpochFinish() {
 	FinalCatchUp();
 	std::fill(bookkeeping.begin(), bookkeeping.end(), 0);
-	model->EpochFinish();
     }
 };
 

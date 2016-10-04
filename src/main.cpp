@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 	Run<MCModel, MCDatapoint>();
     }
     else if (FLAGS_word_embeddings) {
-	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint>();
+	Run<WordEmbeddingsModel, WordEmbeddingsDatapoint, WordEmbeddingsSGDUpdater>();
     }
     else if (FLAGS_matrix_inverse) {
 	Run<MatrixInverseModel, MatrixInverseDatapoint>();

@@ -33,12 +33,6 @@ class Model {
     // Do some set up with the model given partitioning scheme before running the trainer.
     virtual void SetUpWithPartitions(DatapointPartitions &partitions) {}
 
-    // Do any sort of extra computation at the beginning of an epoch.
-    virtual void EpochBegin() {}
-
-    // Do any sort of extra computation at the end of an epoch.
-    virtual void EpochFinish() {}
-
     // Return the number of parameters of the model.
     virtual int NumParameters() = 0;
 
@@ -47,6 +41,12 @@ class Model {
 
     // Return data to actual model.
     virtual std::vector<double> & ModelData() = 0;
+
+    // Return some extra data which may be useful to be modified.
+    virtual std::vector<double> & ExtraData() {
+	// Default: return ModelData.
+	return ModelData();
+    }
 
     // The following are for updates of the form:
     // [∇f(x)] = λx − κ + h(x)

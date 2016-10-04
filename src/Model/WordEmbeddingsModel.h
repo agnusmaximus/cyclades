@@ -26,7 +26,7 @@ DEFINE_int32(vec_length, 30, "Length of word embeddings vector in w2v.");
 class WordEmbeddingsModel : public Model {
  private:
     std::vector<double> model;
-    double C;
+    std::vector<double> C;
     std::vector<double > c_sum_mult1, c_sum_mult2;
     int n_words;
     int w2v_length;
@@ -47,7 +47,10 @@ class WordEmbeddingsModel : public Model {
 
 	// Allocate memory.
 	model.resize(n_words * w2v_length);
-	C = 0;
+
+	// Initialize C = 0.
+	C.resize(1);
+	C[0] = 0;
 
 	// Initialize private model.
 	InitializePrivateModel();
@@ -59,22 +62,6 @@ class WordEmbeddingsModel : public Model {
     }
 
     ~WordEmbeddingsModel() {
-    }
-
-    void SetUpWithPartitions(DatapointPartitions &partitions) override {
-	// Initialize C_sum_mult variables.
-	c_sum_mult1.resize(FLAGS_n_threads);
-	c_sum_mult2.resize(FLAGS_n_threads);
-	// First calculate number of datapoints per thread.
-	int max_datapoints = 0;
-	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
-	    int n_datapoints_for_thread = 0;
-	    for (int batch = 0; batch < partitions.NumBatches(); batch++) {
-		n_datapoints_for_thread += partitions.NumDatapointsInBatch(thread, batch);
-	    }
-	    c_sum_mult1[thread] = 0;
-	    c_sum_mult2[thread] = 0;
-	}
     }
 
     double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
@@ -92,22 +79,9 @@ class WordEmbeddingsModel : public Model {
 		cross_product += (model[x*w2v_length+j]+model[y*w2v_length+j]) *
 		    (model[y*w2v_length+j]+model[y*w2v_length+j]);
 	    }
-	    loss += weight * (log(weight) - cross_product - C) * (log(weight) - cross_product - C);
+	    loss += weight * (log(weight) - cross_product - C[0]) * (log(weight) - cross_product - C[0]);
 	}
 	return loss / datapoints.size();
-    }
-
-    void EpochFinish() {
-	// Update C based on C_sum_mult.
-	double C_A = 0, C_B = 0;
-	for (int thread = 0; thread < FLAGS_n_threads; thread++) {
-	    C_A += c_sum_mult1[thread];
-	    C_B += c_sum_mult2[thread];
-	    c_sum_mult1[thread] = 0;
-	    c_sum_mult2[thread] = 0;
-	}
-
-	C = C_A / C_B;
     }
 
     int CoordinateSize() override {
@@ -122,6 +96,10 @@ class WordEmbeddingsModel : public Model {
 	return model;
     }
 
+    virtual std::vector<double> & ExtraData() override {
+	return C;
+    }
+
     void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
 	if (g->coeffs.size() != 1) g->coeffs.resize(1);
 	const std::vector<double> &labels = datapoint->GetWeights();
@@ -134,11 +112,7 @@ class WordEmbeddingsModel : public Model {
 	    norm += (local_model[coord1*w2v_length+i] + local_model[coord2*w2v_length+i]) *
 		(local_model[coord1*w2v_length+i] + local_model[coord2*w2v_length+i]);
 	}
-	g->coeffs[0] = 2 * weight * (log(weight) - norm - C);
-
-	// Do some extra computation for C.
-	c_sum_mult1[omp_get_thread_num()] += weight * (log(weight) - norm);
-	c_sum_mult2[omp_get_thread_num()] += weight;
+	g->coeffs[0] = 2 * weight * (log(weight) - norm - C[0]);
     }
 
     virtual void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
