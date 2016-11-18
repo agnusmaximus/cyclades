@@ -217,7 +217,7 @@ h_bar. Note that PrecomputeCoefficients is called by multiple threads.
 
 ---
 
-##### virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model)
+##### `virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model)`
 
 Write to output h_bar_j of [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x). Note that this function is called by multiple threads.
 
