@@ -195,7 +195,7 @@ be NumParameters() * CoordinateSize().
 
 ---
 
-<b>Note: For the following gradient related methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).</b>
+For the following gradient related methods, we formulate the gradient at a datapoint x, model coordinate j as [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x).
 
 ---
 
@@ -203,7 +203,7 @@ be NumParameters() * CoordinateSize().
 
 Do any sort of precomputation (E.G: computing dot product) on a
 datapoint before calling methods for computing lambda, kappa and
-h_bar.
+h_bar. Note that PrecomputeCoefficients is called by multiple threads.
 
 ###### Args:
 * <b>datapoint</b> - Data point to precompute gradient information.
@@ -212,7 +212,46 @@ h_bar.
   to store arbitrary data. Note that g->coeffs is initially size 0, so in PrecomputeCoefficients the
   user needs to resize this vector according to their needs. Gradient objects are thread local
   objects that are re-used. Thus, g->coeffs may contain junk precompute info from a previous iteration.
-* <b>local_model</b> - a vector of doubles that contains the raw data of the
-  model to precompute gradient information for.
+* <b>cur_model</b> - a vector of doubles that contains the raw data of the
+  model to precompute gradient information.
+
+---
+
+###### virtual void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model)
+
+Write to output h_bar_j in [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x). Note that Lambda is called by multiple threads.
+
+###### Args:
+* <b>coordinate</b> - The model coordinate j for which h_bar_j should be computed.
+* <b>out</b> - Reference to vector<double> to which the value of h_bar should be written to.
+* <b>g</b> - Gradient object which contains the precomputed data previously set by PrecomputeCoefficients.
+  Further note that g->datapoint is a pointer to the data point whose gradient is being computed (which is the data point
+  that was used by the previous PrecomputeCoefficients to precompute gradient information).
+* <b>local_model</b> - The raw data of the model for which lambda should be computed for.
+
+---
+
+##### `virtual void Lambda(int coordinate, double &out, std::vector<double> &local_model)`
+
+Write to output the λ_j coefficient of the gradient equation [∇f(x)]_j
+= λ_j * x_j − κ_j + h_bar_j(x). Note that Lambda is called by multiple
+threads.
+
+###### Args:
+* <b>coordinate</b> - The model coordinate j for which λ_j should be computed.
+* <b>out</b> - Reference to scalar double to which the value of lambda should be written to.
+* <b>local_model</b> - The raw data of the model for which lambda should be computed for.
+
+---
+
+#### `virtual void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model)`
+
+Write to output the κ_j coefficient of the gradient equation [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x). Note that Kappa is called by multiple
+threads.
+
+###### Args:
+* <b>coordinate</b> - The model coordinate j for which κ_j should be computed.
+* <b>out</b> - Reference to vector<double> to which the value of kappa should be written to.
+* <b>local_model</b> - The raw data of the model for which lambda should be computed for.
 
 ---
