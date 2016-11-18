@@ -160,8 +160,8 @@ A quick example to run after compiling and fetching the data is (run from the ho
    `std::vector<double>`.
 
 ## Defining the Model
-
-The following virtual methods of `Model` are used by the need to be overridden.
+### Virtual Methods
+The following virtual methods of `Model` are required to be overridden.
 
 ```c++
 Model(const std::string &input_line)
