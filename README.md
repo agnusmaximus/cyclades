@@ -163,7 +163,7 @@ A quick example to run after compiling and fetching the data is (run from the ho
 ### Virtual Methods
 The following virtual methods of `Model` are required to be overridden.
 
-#### Model Data Virtual Methods
+---
 
 ##### `Model(const std::string &input_line)`
 
@@ -195,8 +195,6 @@ be NumParameters() * CoordinateSize().
 
 ---
 
-#### Gradient Computation Virtual Methods
-
 For the following methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).
 
 ##### `virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)`
@@ -206,14 +204,14 @@ datapoint before calling methods for computing lambda, kappa and
 h_bar.
 
 ###### Args:
-* datapoint - Data point to precompute gradient information for.
-* g - Gradient object for storing any precomputed data. This is passed
+* <b>datapoint</b> - Data point to precompute gradient information for.
+* <b>g</b> - Gradient object for storing any precomputed data. This is passed
   to the h_bar method afterwards. The relevant Gradient attribute is:
 
      	coeffs - a vector<double> to store arbitrary data. Note that
 	coeffs is initially size 0, so in PrecomputeCoefficients the
 	user needs to resize this vector according to their needs.
 
-* local_model - a vector of doubles that contains the raw data of the
+* <b>local_model</b> - a vector of doubles that contains the raw data of the
   model to precompute gradient information for.
 ---
