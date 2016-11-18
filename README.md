@@ -179,6 +179,5 @@ Return the size of the coordinate vectors of the model. For scalar coordinates, 
 ```
 ```c++
 virtual std::vector<double> & ModelData()
-Return a reference to the underlying data. Note that the length of
-ModelData() should be NumParameters() * CoordinateSize().
+Return a reference to the underlying data. ModelData().size() should be NumParameters() * CoordinateSize().
 ```
