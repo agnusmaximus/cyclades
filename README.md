@@ -127,8 +127,10 @@ A quick example to run after compiling and fetching the data is (run from the ho
    is fed to the constructor of the model, and each subsequent line
    is used to instantiate separate instances of the `Datapoint` class.
 
-   For example, if we had the custom model class `MyCustomModel` and the
-   custom data point class `MyCustomDatapoint`, a data file containing
+   For example, suppose we are writing the custom model class
+   `MyCustomModel` and the custom data point class
+   `MyCustomDatapoint` and the data file contains
+
    ```c++
    1 2
    1
@@ -138,6 +140,21 @@ A quick example to run after compiling and fetching the data is (run from the ho
    5
    ```
 
-   would result in the model being initialized via `MyCustomModel("1 2")`,
-   and five `MyCustomDatapoint` instantiated -- `MyCustomDatapoint("1")`,
-   `MyCustomDatapoint("2")`,..., `MyCustomDatapoint("5")`.
+   This would result in the model being instantiated as
+   `MyCustomModel("1 2")` and the creation of five separate instances
+   of the data point class: `MyCustomDatapoint("1")`,
+   `MyCustomDatapoint("2")`, ... , `MyCustomDatapoint("5"). Note that
+   the inputs are strings.
+
+   The `MyCustomDatapoint(const std::string &input_line)` and
+   `MyCustomModel(const std::string &input_line)` constructors can
+   then be defined by the user to specify how to initialize the
+   objects using the given data file inputs. For example the model
+   data input may specify the dimension of the model, and the
+   constructor may use this information to pre-allocate enough memory
+   to hold it.
+
+   It is important to note that the user must manage the underlying
+   data behind their custom model / datapoint classes. For the model,
+   the underlying raw model data should be captured by a
+   `std::vector<double>`.
