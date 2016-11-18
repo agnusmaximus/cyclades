@@ -164,6 +164,9 @@ A quick example to run after compiling and fetching the data is (run from the ho
 The following virtual methods of `Model` are used by the need to be overridden.
 
 `Model(const std::string &input_line)` - The constructor for the subclass. Fed the first line of the data file.
+
 `virtual int NumParameters()` - Return the number of coordinates of the model.
+
 `virtual int CoordinateSize()` - Return the size of the coordinate vectors of the model. For scalar coordinates, return 1.
+
 `virtual std::vector<double> & ModelData()` - Return a reference to the underlying data. Note that the length of `ModelData()` should be `NumParameters()` * `CoordinateSize()`.
