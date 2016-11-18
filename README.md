@@ -169,7 +169,7 @@ The following virtual methods of `Model` are required to be overridden.
 
 The constructor for the subclass of Model.
 
-####### Args:
+###### Args:
 
 * <b>input_line</b> - first line of the data file.
 
