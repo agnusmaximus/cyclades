@@ -226,7 +226,7 @@ Write to output h_bar_j of [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x). Note 
 * <b>out</b> - Reference to vector<double> to which the value of h_bar should be written to.
 * <b>g</b> - Gradient object which contains the precomputed data previously set by PrecomputeCoefficients.
   Further note that g->datapoint is a pointer to the data point whose gradient is being computed (which is the data point
-  that was used by the previous PrecomputeCoefficients to precompute gradient information).
+  that was used by PrecomputeCoefficients to precompute gradient information).
 * <b>local_model</b> - The raw data of the model for which lambda should be computed for.
 
 ---
