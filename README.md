@@ -106,3 +106,38 @@ A quick example to run after compiling and fetching the data is (run from the ho
 ```c++
 ./cyclades   --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cyclades_trainer  -cyclades_batch_size=800 -n_epochs=20 -sparse_sgd --data_file="data/movielens/ml-1m/movielens_1m.data"
 ```
+
+# Guide on writing your own models
+## Overview
+
+   Writing a model that can be optimized using Hogwild and Cyclades is
+   straightforward. The two main classes that need to be overridden by
+   the user are the `Model` and `Datapoint` classes, which capture all
+   necessary information required for optimization. The `Model` class
+   is a wrapper around the user-defined model data, specifying methods
+   that operate on the model (such as computing gradients and loss).
+   The `Datapoint` class is a wrapper around the individual data
+   elements used to train the model.
+
+## Data File Reading / Data File Format
+
+   The data file specified by the `--data_file` flag should contain
+   information to initialize the model, as well as the individual data
+   points that are used for training. The first line of the data file
+   is fed to the constructor of the model, and each subsequent line
+   is used to instantiate separate instances of the `Datapoint` class.
+
+   For example, if we had the custom model class `MyCustomModel` and the
+   custom data point class `MyCustomDatapoint`, a data file containing
+   ```c++
+   1 2
+   1
+   2
+   3
+   4
+   5
+   ```
+
+   would result in the model being initialized via `MyCustomModel("1 2")`,
+   and five `MyCustomDatapoint` instantiated -- `MyCustomDatapoint("1")`,
+   `MyCustomDatapoint("2")`,..., `MyCustomDatapoint("5")`.
