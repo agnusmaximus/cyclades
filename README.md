@@ -195,7 +195,7 @@ be NumParameters() * CoordinateSize().
 
 ---
 
-For the following gradient related methods, we formulate the gradient at a datapoint x, model coordinate j as [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x).
+<b>For the following gradient related methods, we formulate the gradient at a datapoint x, model coordinate j as [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x).</b>
 
 ---
 
