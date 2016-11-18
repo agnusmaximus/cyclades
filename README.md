@@ -143,7 +143,7 @@ A quick example to run after compiling and fetching the data is (run from the ho
    This would result in the model being instantiated as
    `MyCustomModel("1 2")` and the creation of five separate instances
    of the data point class: `MyCustomDatapoint("1")`,
-   `MyCustomDatapoint("2")`, ... , `MyCustomDatapoint("5"). Note that
+   `MyCustomDatapoint("2")`, ... , `MyCustomDatapoint("5")`. Note that
    the inputs are strings.
 
    The `MyCustomDatapoint(const std::string &input_line)` and
