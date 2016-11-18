@@ -107,7 +107,7 @@ A quick example to run after compiling and fetching the data is (run from the ho
 ./cyclades   --print_loss_per_epoch  --print_partition_time  --n_threads=2 --learning_rate=1e-2  -matrix_completion  -cyclades_trainer  -cyclades_batch_size=800 -n_epochs=20 -sparse_sgd --data_file="data/movielens/ml-1m/movielens_1m.data"
 ```
 
-# Guide on writing your own models
+# Guide On Writing Custom Models
 ## Overview
 
    Writing a model that can be optimized using Hogwild and Cyclades is
