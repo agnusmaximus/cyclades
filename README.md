@@ -161,6 +161,7 @@ A quick example to run after compiling and fetching the data is (run from the ho
 
 ## Defining the Model
 ### Virtual Methods
+#### Model Data Virtual Methods
 The following virtual methods of `Model` are required to be overridden.
 
 ```c++
