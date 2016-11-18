@@ -195,7 +195,7 @@ be NumParameters() * CoordinateSize().
 
 ---
 
-Note: For the following gradient related methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).
+<b>Note: For the following gradient related methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).</b>
 
 ---
 
@@ -206,7 +206,7 @@ datapoint before calling methods for computing lambda, kappa and
 h_bar.
 
 ###### Args:
-* <b>datapoint</b> - Data point to precompute gradient information for.
+* <b>datapoint</b> - Data point to precompute gradient information.
 * <b>g</b> - Gradient object for storing any precomputed data. This is passed
   to the h_bar method afterwards. The relevant Gradient attribute is g->coeffs, a vector<double>
   to store arbitrary data. Note that g->coeffs is initially size 0, so in PrecomputeCoefficients the
@@ -214,4 +214,5 @@ h_bar.
   objects that are re-used. Thus, g->coeffs may contain junk precompute info from a previous iteration.
 * <b>local_model</b> - a vector of doubles that contains the raw data of the
   model to precompute gradient information for.
+
 ---
