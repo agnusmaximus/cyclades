@@ -166,10 +166,11 @@ The following virtual methods of `Model` are required to be overridden.
 #### Model Data Virtual Methods
 
 ```c++
-# The constructor for the subclass.
-# @input_line - first line of the data file
 Model(const std::string &input_line)
 ```
+The constructor for the subclass.
+@input_line - first line of the data file
+
 ```c++
 virtual int NumParameters()
 Return the number of coordinates of the model.
