@@ -165,50 +165,46 @@ The following virtual methods of `Model` are required to be overridden.
 
 #### Model Data Virtual Methods
 
-```c++
-Model(const std::string &input_line)
+##### `Model(const std::string &input_line)`
 
-The constructor for the subclass.
+The constructor for the subclass of Model.
 
-@input_line - first line of the data file
-```
+####### Args:
 
-```c++
-virtual int NumParameters()
+* <b>input_line</b> - first line of the data file.
+
+##### `virtual int NumParameters()`
 
 Return the number of coordinates of the model.
-```
-```c++
-virtual int CoordinateSize()
+
+##### `virtual int CoordinateSize()`
 
 Return the size of the coordinate vectors of the model. For scalar
 coordinates, return 1.
 
-```
-```c++
-virtual std::vector<double> & ModelData()
+##### `virtual std::vector<double> & ModelData()`
 
 Return a reference to the underlying data. ModelData().size() should
 be NumParameters() * CoordinateSize().
 
-```
 #### Gradient Computation Virtual Methods
 
 For the following methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).
 
-```c++
-virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)
+##### `virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)`
 
 Do any sort of precomputation (E.G: computing dot product) on a
 datapoint before calling methods for computing lambda, kappa and
 h_bar.
 
-@datapoint - Data point to precompute gradient information for.
+###### Args:
+* datapoint - Data point to precompute gradient information for.
+* g - Gradient object for storing any precomputed data. This is passed
+  to the h_bar method afterwards. The relevant Gradient attribute is:
 
-@g - Gradient object for storing any precomputed data. This is passed
-to the h_bar method afterwards.
+     	coeffs - a vector<double> to store arbitrary data. Note that
+	coeffs is initially size 0, so in PrecomputeCoefficients the
+	user needs to resize this vector according to their needs.
 
-@local_model - a vector of doubles that contains the raw data of the
-model to precompute gradient information for.
-
-```
+* local_model - a vector of doubles that contains the raw data of the
+  model to precompute gradient information for.
