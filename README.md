@@ -195,7 +195,9 @@ be NumParameters() * CoordinateSize().
 
 ---
 
-For the following methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).
+Note: For the following gradient related methods, we formulate the gradient at a datapoint x as [∇f(x)] = λx − κ + h_bar(x).
+
+---
 
 ##### `virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)`
 
@@ -206,12 +208,10 @@ h_bar.
 ###### Args:
 * <b>datapoint</b> - Data point to precompute gradient information for.
 * <b>g</b> - Gradient object for storing any precomputed data. This is passed
-  to the h_bar method afterwards. The relevant Gradient attribute is:
-
-     	coeffs - a vector<double> to store arbitrary data. Note that
-	coeffs is initially size 0, so in PrecomputeCoefficients the
-	user needs to resize this vector according to their needs.
-
+  to the h_bar method afterwards. The relevant Gradient attribute is g->coeffs, a vector<double>
+  to store arbitrary data. Note that g->coeffs is initially size 0, so in PrecomputeCoefficients the
+  user needs to resize this vector according to their needs. Gradient objects are thread local
+  objects that are re-used. Thus, g->coeffs may contain junk precompute info from a previous iteration.
 * <b>local_model</b> - a vector of doubles that contains the raw data of the
   model to precompute gradient information for.
 ---
