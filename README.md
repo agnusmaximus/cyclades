@@ -168,7 +168,7 @@ The following virtual methods of `Model` are required to be overridden.
 ```c++
 Model(const std::string &input_line)
 The constructor for the subclass.
-- input_line - first line of the data file
+@input_line - first line of the data file
 ```
 ```c++
 virtual int NumParameters()
@@ -188,10 +188,11 @@ For the following methods, we formulate the gradient at a datapoint x as [∇f(x
 
 ```c++
 virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)
-Do any sort of precomputation (E.G: computing dot product) on a datapoint before calling methods for computing lambda, kappa and h_bar.
+Do any sort of precomputation (E.G: computing dot product) on a datapoint
+before calling methods for computing lambda, kappa and h_bar.
 
-- datapoint - Data point to precompute gradient information for.
-- g - Gradient object for storing any precomputed data. This is passed to the h_bar method afterwards.
-
-- local_model - a vector of doubles that contains the raw data of the model to precompute gradient information for.
+@datapoint - Data point to precompute gradient information for.
+@g - Gradient object for storing any precomputed data. This is passed to the h_bar method afterwards.
+@local_model - a vector of doubles that contains the raw data
+	       of the model to precompute gradient information for.
 ```
