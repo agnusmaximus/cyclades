@@ -167,20 +167,25 @@ The following virtual methods of `Model` are required to be overridden.
 
 ```c++
 Model(const std::string &input_line)
-```
+
 The constructor for the subclass.
+
 @input_line - first line of the data file
+```
 
 ```c++
 virtual int NumParameters()
+
 Return the number of coordinates of the model.
 ```
 ```c++
 virtual int CoordinateSize()
+
 Return the size of the coordinate vectors of the model. For scalar coordinates, return 1.
 ```
 ```c++
 virtual std::vector<double> & ModelData()
+
 Return a reference to the underlying data. ModelData().size() should be NumParameters() * CoordinateSize().
 ```
 #### Gradient Computation Virtual Methods
@@ -189,6 +194,7 @@ For the following methods, we formulate the gradient at a datapoint x as [∇f(x
 
 ```c++
 virtual void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model)
+
 Do any sort of precomputation (E.G: computing dot product) on a datapoint
 before calling methods for computing lambda, kappa and h_bar.
 
