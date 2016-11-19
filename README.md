@@ -203,6 +203,19 @@ The constructor for the subclass of Model.
 
 ---
 
+##### `virtual double ComputeLoss(const std::vector<Datapoint *> &datapoints)`
+
+Compute loss value given a list of data points.
+
+###### Args:
+
+* <b>datapoints</b> - vector of pointers to the user defined data
+  point structure. If the custom data point structure has methods not
+  listed in the `Model` parent class you may need to cast the pointer
+  to a pointer of the custom class.
+
+---
+
 ##### `virtual int NumParameters()`
 
 Return the number of coordinates of the model.
