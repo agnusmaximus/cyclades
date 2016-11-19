@@ -1,0 +1,2 @@
+./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time -matrix_inverse -svrg  -cyclades_trainer  -cyclades_batch_size=200 -n_epochs=200, Cyclades, red, solid, 1|4|8|12|16, 1e-1|1e-1|1e-1|1e-1|1e-1
+./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time -matrix_inverse -svrg  -hogwild_trainer  -cyclades_batch_size=200 -n_epochs=200, Hogwild!, blue, solid, 1|4|8|12|16, 1e-1|1e-1|1e-1|1e-1|1e-1
