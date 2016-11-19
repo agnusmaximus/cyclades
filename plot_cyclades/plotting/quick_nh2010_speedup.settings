@@ -1,0 +1,2 @@
+./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time  -least_squares  -hogwild_trainer  -cyclades_batch_size=200 -n_epochs=10 -sparse_sgd, Hogwild!, blue, solid, 1|2, 3e-14|1e-14
+./cyclades --data_file="./data/nh2010/nh2010/nh2010.data" --print_loss_per_epoch  --print_partition_time  -least_squares  -cyclades_trainer  -cyclades_batch_size=200 -n_epochs=10 -sparse_sgd, Cyclades, red, solid, 1|2, 3e-14|3e-14
