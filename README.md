@@ -33,8 +33,7 @@ performance too much. In fact, in some cases the avoidance of conflicts and
 the slightly better cache behavior of Cyclades leads to better
 performance.
 
-<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/SGD%20Matrix%20Completion%208%20threads%20-%20Movielens%2010m.png" width="400" height="300"/>
-<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%20Speedup.png" width="350" height="300" />
+<div align="center"><img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Matrix%20Completion%20Speedup.png" width="350" height="300" /></div>
 
 <em> Cyclades initially starts slower than Hogwild due to the overhead
 of partitioning the conflict graph. But by having better locality and
