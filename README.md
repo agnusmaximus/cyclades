@@ -115,7 +115,9 @@ A quick example to run after compiling and fetching the data is (run from the ho
    is a wrapper around the user-defined model data, specifying methods
    that operate on the model (such as computing gradients and loss).
    The `Datapoint` class is a wrapper around the individual data
-   elements used to train the model.
+   elements used to train the model. After defining the `Datapoint`
+   and `Model` subclasses, the user can run Cyclades/Hogwild by
+   including "run.h" and calling `Run<CustomModel, CustomDatapoint>()`.
 
 ## Data File Reading / Data File Format
 
