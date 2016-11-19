@@ -108,7 +108,6 @@ A quick example to run after compiling and fetching the data is (run from the ho
 ```
 
 # Guide On Writing Custom Models
-## Overview
 
    Writing a model that can be optimized using Hogwild and Cyclades is
    straightforward. The two main classes that need to be overridden by
@@ -159,7 +158,36 @@ A quick example to run after compiling and fetching the data is (run from the ho
    the underlying raw model data should be captured by a
    `std::vector<double>`.
 
-## Defining the Model
+## Defining the Datapoint Subclass
+
+The following virtual methods of `Datapoint` are required to be overridden.
+
+#### `Datapoint(const std::string &input_line, int order)`
+
+The constructor for the subclass of Datapoint. The `order` argument
+should be passed in to the superclass initialization call. For example:
+`CustomDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order)`
+
+##### Args:
+
+* <b>input_line</b> - The line of input from the data file.
+* <b>order</b> - The order in which this data point appears in the shuffled permutation of data points.
+
+---
+
+#### `virtual std::vector<double> & GetWeights()`
+
+Return a vector<double> of weights where the i'th weight in the returned vector corresponds to the i'th coordinate of GetCoordinates().
+
+---
+
+#### `virtual std::vector<int> & GetCoordinates()`
+
+Return a vector<double> of coordinates where the i'th coordinate of the returned vector corresponds to the i'th weight of GetWeights().
+
+---
+
+## Defining the Model Subclass
 
 The following virtual methods of `Model` are required to be overridden.
 
