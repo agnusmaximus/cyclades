@@ -165,8 +165,8 @@ The following virtual methods of `Datapoint` are required to be overridden.
 #### `Datapoint(const std::string &input_line, int order)`
 
 The constructor for the subclass of Datapoint. The `order` argument
-should be passed in to the superclass initialization call. For example:
-`CustomDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order)`
+should be passed in to the superclass constructor call. For example:
+`CustomDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) { ... }`
 
 ##### Args:
 
