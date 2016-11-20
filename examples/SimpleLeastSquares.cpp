@@ -139,7 +139,7 @@ public:
     // h_bar_j(x) = 2(a_i * x - b_i) a_i
     // We can just precompute the each h_bar_j directly.
     void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
-	// We need to make sure g->coeffs can store the gradient to the model (since we are storing a scalar).
+	// We need to make sure g->coeffs can store the gradient to the model.
 	if (g->coeffs.size() != 1) g->coeffs.resize(NumParameters());
 
 	// Compute 2(a_i * x - b_i).
