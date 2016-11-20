@@ -1,3 +1,6 @@
+// Make: make simple_ls
+// Sample run: ./simple_ls --sparse_sgd --n_epochs=10  --learning_rate=1e-1 --print_loss_per_epoch --hogwild_trainer --n_threads=1 --data_file='./examples/simple_ls_data'
+
 #include <iostream>
 #include <vector>
 #include "../src/run.h"
