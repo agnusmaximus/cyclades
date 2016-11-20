@@ -297,3 +297,74 @@ threads.
 * <b>local_model</b> - The raw data of the model for which lambda should be computed for.
 
 ---
+
+## Example: Sparse Least Squares
+
+Here we show how to define a custom model and datapoint class to solve
+the classic least squares problem. In the least squares problem we are
+interested in minimizing the function `||Ax-b||^2`. A data point in
+this sense is a row of `A` which we refer to as `a_i`, and the model
+we are optimizing is `x`. Note that minimizing `||Ax-b||^2` is
+equivalent to minimizing `sum (dot(a_i, x) - b)^2`. For the purposes
+of this example, we will name our least squares model `SimpleLSModel`
+and our least squares datapoint `SimpleLSDatapoint`. The full
+source code for the example is in the examples directory.
+
+### Starting off
+
+To begin using Cyclades, we must include the "run.h" and "defines.h"
+files in the src directory. Furthermore, to make use of gflags, we
+must also initialize gflags.
+
+```c++
+#include "../src/run.h"
+#include "../src/defines.h"
+
+int main(int argc, char **argv) {
+    // Initialize gflags
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+}
+```
+
+After implementing `SimpleLSDatapoint` and `SimpleLSModel` we can call
+```c++
+Run<SimpleLSModel, SimpleLSDatapoint>();
+```
+to solve the least squares problem with the passed in command line flags.
+
+### Data File Format / Data File Reading
+
+To store the `A` matrix and `b` label vector, we will use the following format.
+```c++
+line 1 (fed to model constructor) : Dimension of the x model vector
+line 2...n : m index_of_nnz_1 value_of_nnz_1 ... index_of_nnz_m value_of_nnz_m label
+```
+
+For the purposes of this example we will use the following data input:
+```c++
+10
+1 0 1 1
+1 1 1 2
+1 2 1 3
+1 3 1 4
+1 4 1 5
+1 5 1 6
+1 6 1 7
+1 7 1 8
+1 8 1 9
+1 9 1 10
+```
+
+This is equivalent to solving the problem
+```c++
+A = 1 0 0 0 0 0 0 0 0 0       b = 1
+    0 1 0 0 0 0 0 0 0 0           2
+    0 0 1 0 0 0 0 0 0 0           3
+    0 0 0 1 0 0 0 0 0 0           4
+    0 0 0 0 1 0 0 0 0 0           5
+    0 0 0 0 0 1 0 0 0 0           6
+    0 0 0 0 0 0 1 0 0 0           7
+    0 0 0 0 0 0 0 1 0 0           8
+    0 0 0 0 0 0 0 0 1 0           9
+    0 0 0 0 0 0 0 0 0 1           10
+```
