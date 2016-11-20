@@ -102,14 +102,6 @@ DEFINE_bool(sparse_sgd, false, "Use the sparse SGD update method.");
 DEFINE_bool(svrg, false, "Use the SVRG update method.");
 DEFINE_bool(saga, false, "Use the SAGA update method. Note this assumes gradients are sparse.");
 
-// Flags for application types.
-DEFINE_bool(matrix_completion, false, "Matrix completion application type.");
-DEFINE_bool(fast_matrix_completion, false, "Matrix completion with custom sgd updater. Do not specify an extra updater (e.g: don't specify --sparse_sgd, etc)");
-DEFINE_bool(dense_least_squares, false, "Dense least squares application type.");
-DEFINE_bool(word_embeddings, false, "W2V application type. Do NOT set an updater (E.G: sparse_sgd) if you want to use the default optimizer which optimizes C.");
-DEFINE_bool(matrix_inverse, false, "Matrix inverse application type.");
-DEFINE_bool(least_squares, false, "Sparse least squares application type.");
-
 // MISC flags.
 DEFINE_int32(random_range, 100, "Range of random numbers for initializing the model.");
 

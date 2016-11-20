@@ -27,4 +27,6 @@ endif()
 add_subdirectory(gflags)
 
 add_executable(cyclades src/main.cpp)
+add_executable(simple_ls examples/SimpleLeastSquares.cpp)
 target_link_libraries(cyclades gflags)
+target_link_libraries(simple_ls gflags)

@@ -19,6 +19,13 @@
 #include <iostream>
 #include "run.h"
 
+// Flags for application types.
+DEFINE_bool(matrix_completion, false, "Matrix completion application type.");
+DEFINE_bool(fast_matrix_completion, false, "Matrix completion with custom sgd updater. Do not specify an extra updater (e.g: don't specify --sparse_sgd, etc)");
+DEFINE_bool(word_embeddings, false, "W2V application type. Do NOT set an updater (E.G: sparse_sgd) if you want to use the default optimizer which optimizes C.");
+DEFINE_bool(matrix_inverse, false, "Matrix inverse application type.");
+DEFINE_bool(least_squares, false, "Sparse least squares application type.");
+
 int main(int argc, char **argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     if (FLAGS_matrix_completion) {
