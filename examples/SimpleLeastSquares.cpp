@@ -145,7 +145,7 @@ public:
 	// Compute 2(a_i * x - b_i).
 	SimpleLSDatapoint *a_i = (SimpleLSDatapoint *)datapoint;
 	double b_i = a_i->label;
-	double coefficient = 2 * (dot(a_i, x) - b_i);
+	double coefficient = 2 * (dot(a_i, local_model) - b_i);
 
 	// For each nnz weight of the data point, set g->coeffs appropriately.
 	for (int i = 0; i < datapoint->GetNumCoordinateTouches(); i++) {
