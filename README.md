@@ -377,3 +377,60 @@ A = 1 0 0 0 0 0 0 0 0 0       b = 1
     0 0 0 0 0 0 0 0 1 0           9
     0 0 0 0 0 0 0 0 0 1           10
 ```
+
+### Definine `SimpleLSDatapoint`
+
+First we subclass `Datapoint`, and keep a `weights` vector, a
+`coordinates` vector, and a `label` double.
+
+```c++
+class SimpleLSDatapoint : public Datapoint {
+public:
+    std::vector<double> weights;
+    std::vector<int> coordinates;
+    double label;
+};
+```
+
+`weights[i]` will contain the value of the row of `A` at the index
+specified `coordinates[i]`. This is a sparse representation of a row
+of a matrix.
+
+To read the datapoint values from a line of the input file, we
+implement the constructor to read according to the format. Ignore the
+`order` parameter.
+
+```c++
+    SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
+	std::stringstream in(input_line);
+	int n;
+	in >> n;
+	weights.resize(n);
+	coordinates.resize(n);
+	for (int i = 0; i < n; i++) {
+	    in >> coordinates[i];
+	    in >> weights[i];
+	}
+	in >> label;
+    }
+```
+
+Here we read the `n` the total number of nnz values, then proceed to
+read them into the `weights` and `coordinates` vector. Finally, we
+read the corresponding label for that row as well.
+
+Finally, we fill in the required `GetWeights`, `GetCoordinates()` and
+`GetNumCoordinateTouches()` methods.
+```c++
+    std::vector<double> & GetWeights() override {
+	return weights;
+    }
+
+    std::vector<int> & GetCoordinates() override {
+	return coordinates;
+    }
+
+    int GetNumCoordinateTouches() override {
+	return coordinates.size();
+    }
+```
