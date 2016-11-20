@@ -542,7 +542,11 @@ std::vector<double> &ModelData() override {
 }
 ```
 
-To define `Lambda`, `H_bar`, `Kappa`, recall the gradient at a datapoint is `d/dx(fx) = d/dx (dot(a_i, x) - b_i)^2` = `2(dot(a_i, x) - b_i) a_i`. Casting this in terms of `[∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x)` indicates that `λ_j = 0`, `x_j = 0` and `h_bar_j(x) = 2(dot(a_i, x) - b_i) a_i`.
+To define `Lambda`, `H_bar`, `Kappa`, recall for least squares the
+gradient at a datapoint is `d/dx(fx) = d/dx (dot(a_i, x) - b_i)^2 =
+2(dot(a_i, x) - b_i) a_i`. Casting this in terms of `[∇f(x)]_j = λ_j *
+x_j − κ_j + h_bar_j(x)` indicates that `λ_j = 0`, `x_j = 0` and
+`h_bar_j(x) = 2(dot(a_i, x) - b_i) a_i`.
 
 ```c++
 void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
