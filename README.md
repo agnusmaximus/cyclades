@@ -111,21 +111,26 @@ A quick example to run after compiling and fetching the data is (run from the ho
    Writing a model that can be optimized using Hogwild and Cyclades is
    straightforward. The two main classes that need to be overridden by
    the user are the `Model` and `Datapoint` classes, which capture all
-   necessary information required for optimization. The `Model` class
-   is a wrapper around the user-defined model data, specifying methods
-   that operate on the model (such as computing gradients and loss).
-   The `Datapoint` class is a wrapper around the individual data
-   elements used to train the model. After defining the `Datapoint`
-   and `Model` subclasses, the user can run Cyclades/Hogwild by
-   including "run.h" and calling `Run<CustomModel, CustomDatapoint>()`.
+   necessary information required for optimization.
+
+   The `Model` class is a wrapper around the user-defined model data,
+   specifying methods that operate on the model (such as computing
+   gradients and loss).  The `Datapoint` class is a wrapper around the
+   individual data elements used to train the model.
+
+   After defining the `Datapoint` and `Model` subclasses, the user can
+   run Cyclades/Hogwild by including "run.h" and calling
+   `Run<CustomModel, CustomDatapoint>()`.
 
 ## Data File Reading / Data File Format
 
    The data file specified by the `--data_file` flag should contain
    information to initialize the model, as well as the individual data
-   points that are used for training. The first line of the data file
-   is fed to the constructor of the model, and each subsequent line
-   is used to instantiate separate instances of the `Datapoint` class.
+   points that are used for training.
+
+   The first line of the data file is fed to the constructor of the
+   model, and each subsequent line is used to instantiate separate
+   instances of the `Datapoint` class.
 
    For example, suppose we are writing the custom model class
    `MyCustomModel` and the custom data point class
@@ -301,14 +306,18 @@ threads.
 ## Example: Sparse Least Squares
 
 Here we show how to define a custom model and datapoint class to solve
-the classic least squares problem. In the least squares problem we are
-interested in minimizing the function `||Ax-b||^2`. A data point in
-this sense is a row of `A` which we refer to as `a_i`, and the model
-we are optimizing is `x`. Note that minimizing `||Ax-b||^2` is
-equivalent to minimizing `sum (dot(a_i, x) - b)^2`. For the purposes
-of this example, we will name our least squares model `SimpleLSModel`
-and our least squares datapoint `SimpleLSDatapoint`. The full
-source code for the example is in the examples directory.
+the classic least squares problem.
+
+In the least squares problem we are interested in minimizing the
+function `||Ax-b||^2`. A data point in this sense is a row of `A`
+which we refer to as `a_i`, and the model we are optimizing is
+`x`. Note that minimizing `||Ax-b||^2` is equivalent to minimizing
+`sum (dot(a_i, x) - b)^2`.
+
+For the purposes of this example, we will name our least squares model
+`SimpleLSModel` and our least squares datapoint
+`SimpleLSDatapoint`. The full source code is in the examples
+directory.
 
 ### Starting off
 
@@ -336,8 +345,8 @@ to solve the least squares problem with the passed in command line flags.
 
 To store the `A` matrix and `b` label vector, we will use the following format.
 ```c++
-line 1 (fed to model constructor) : Dimension of the x model vector
-line 2...n : m index_of_nnz_1 value_of_nnz_1 ... index_of_nnz_m value_of_nnz_m label
+line 1 (input to model constructor) : Dimension of the x model vector
+line 2...n (input to datapoint constructor) : m index_of_nnz_1 value_of_nnz_1 ... index_of_nnz_m value_of_nnz_m label
 ```
 
 For the purposes of this example we will use the following data input:
@@ -355,7 +364,7 @@ For the purposes of this example we will use the following data input:
 1 9 1 10
 ```
 
-This is equivalent to solving the problem
+This is equivalent to solving the problem with
 ```c++
 A = 1 0 0 0 0 0 0 0 0 0       b = 1
     0 1 0 0 0 0 0 0 0 0           2
