@@ -401,18 +401,18 @@ implement the constructor to read according to the format. Ignore the
 `order` parameter.
 
 ```c++
-    SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
-	std::stringstream in(input_line);
-	int n;
-	in >> n;
-	weights.resize(n);
-	coordinates.resize(n);
-	for (int i = 0; i < n; i++) {
-	    in >> coordinates[i];
-	    in >> weights[i];
-	}
-	in >> label;
+SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
+    std::stringstream in(input_line);
+    int n;
+    in >> n;
+    weights.resize(n);
+    coordinates.resize(n);
+    for (int i = 0; i < n; i++) {
+        in >> coordinates[i];
+        in >> weights[i];
     }
+    in >> label;
+}
 ```
 
 Here we read the `n` the total number of nnz values, then proceed to
@@ -422,15 +422,15 @@ read the corresponding label for that row as well.
 Finally, we fill in the required `GetWeights`, `GetCoordinates()` and
 `GetNumCoordinateTouches()` methods.
 ```c++
-    std::vector<double> & GetWeights() override {
-	return weights;
-    }
+std::vector<double> & GetWeights() override {
+    return weights;
+}
 
-    std::vector<int> & GetCoordinates() override {
-	return coordinates;
-    }
+std::vector<int> & GetCoordinates() override {
+    return coordinates;
+}
 
-    int GetNumCoordinateTouches() override {
-	return coordinates.size();
-    }
+int GetNumCoordinateTouches() override {
+    return coordinates.size();
+}
 ```
