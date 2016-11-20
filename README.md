@@ -345,7 +345,7 @@ to solve the least squares problem with the passed in command line flags.
 
 To store the `A` matrix and `b` label vector, we will use the following format.
 ```c++
-line 1 (input to model constructor) : Dimension of the x model vector
+line 1 (input to model constructor) : the dimension of the x model vector
 line 2...n (input to datapoint constructor) : m index_of_nnz_1 value_of_nnz_1 ... index_of_nnz_m value_of_nnz_m label
 ```
 
@@ -378,7 +378,7 @@ A = 1 0 0 0 0 0 0 0 0 0       b = 1
     0 0 0 0 0 0 0 0 0 1           10
 ```
 
-### Definine `SimpleLSDatapoint`
+### Defining `SimpleLSDatapoint`
 
 First we subclass `Datapoint`, and keep a `weights` vector, a
 `coordinates` vector, and a `label` double.
@@ -394,7 +394,9 @@ public:
 
 `weights[i]` will contain the value of the row of `A` at the index
 specified `coordinates[i]`. This is a sparse representation of a row
-of a matrix.
+of a matrix. `label` will be the corresponding `b_i` of the row
+specified by the data point. The Cyclades framework does not require a
+`label` variable, but it will be used by the model when computing gradients.
 
 To read the datapoint values from a line of the input file, we
 implement the constructor to read according to the format. Ignore the
@@ -402,7 +404,15 @@ implement the constructor to read according to the format. Ignore the
 
 ```c++
 SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
+    // Create a string stream from the input line.
+    // This lets us read from the line as if reading via cin.
     std::stringstream in(input_line);
+
+    // We expect a sparse row from the A matrix, a_i, as well as the
+    // corresponding value of b_i. The first value of the line is the number
+    // of nnz values in the row of the matrix.
+    // E.g:
+    // n index_1 value_1 index_2 value_2 .... index_n value_n label
     int n;
     in >> n;
     weights.resize(n);
@@ -414,10 +424,6 @@ SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_li
     in >> label;
 }
 ```
-
-Here we read the `n` the total number of nnz values, then proceed to
-read them into the `weights` and `coordinates` vector. Finally, we
-read the corresponding label for that row as well.
 
 Finally, we fill in the required `GetWeights`, `GetCoordinates()` and
 `GetNumCoordinateTouches()` methods.
@@ -432,5 +438,85 @@ std::vector<int> & GetCoordinates() override {
 
 int GetNumCoordinateTouches() override {
     return coordinates.size();
+}
+```
+
+### Defining `SimpleLSModel`
+
+First we subclass `Model`, and define `x`, the raw data containing the
+model we are trying to optimize.
+
+```c++
+class SimpleLSModel : public Model {
+public:
+    std::vector<double> x;
+};
+```
+Initialization with the data input line from the constructor is similar to the
+process in `SimpleLSDatapoint`.
+
+```c++
+SimpleLSModel(const std::string &input_line) {
+    // Create a string stream from the input line.
+    // This lets us read from the line as if reading via cin.
+    std::stringstream in(input_line);
+
+    // We expect a single integer describing the number
+    // of coordinates of the model.
+    int num_coordinates;
+    in >> num_coordinates;
+
+    // Preallocate the x model and randomly initialize.
+    x.resize(num_coordinates);
+    for (int i = 0; i < x.size(); i++) {
+        x[i] = ((double)rand()/(double)RAND_MAX);
+    }
+}
+```
+
+Here we additionally allocate enough memory to hold the model `x` and
+furthermore randomly initialize its values.
+
+It is convenient to define a dot product operation which computes the
+dot product between a row specified by `SimpleLSDatapoint` and the
+model.
+
+```c++
+double dot(SimpleLSDatapoint *a_i, std::vector<double> &x) {
+    double product = 0;
+    for (int i = 0; i < a_i->GetNumCoordinateTouches(); i++) {
+        int index = a_i->GetCoordinates()[i];
+        double value = a_i->GetWeights()[i];
+        product += value * x[index];
+    }
+    return product;
+}
+```
+
+Computing the loss is iterating through the data points and summing up
+`(dot(a_i, x) - b)^2`.
+```c++
+// Minimize loss = sum (a_i * x - b)^2.
+double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
+    double loss = 0;
+
+    // Note that ComputeLoss is called by a SINGLE thread.
+    // It is possible to parallelize this via
+    // #pragma omp parallel for
+    for (int i = 0; i < datapoints.size(); i++) {
+        SimpleLSDatapoint *a_i = (SimpleLSDatapoint *)datapoints[i];
+        double b_i = a_i->label;
+        double dot_product = dot(a_i, x);
+        loss += (dot_product - b_i) * (dot_product - b_i);
+    }
+
+    // Let's also print out the model to see if we are on the right track.
+    std::cout << "Model Parameters: " << std::endl;
+    for (int i = 0; i < NumParameters(); i++) {
+        std::cout << x[i] << " ";
+    }
+    std::cout << std::endl;
+
+    return loss / datapoints.size();
 }
 ```
