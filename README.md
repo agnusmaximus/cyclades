@@ -546,8 +546,7 @@ To define `Lambda`, `H_bar`, `Kappa`, recall for least squares the
 gradient at a datapoint is
 
 ```c++
-d/dx(fx) = d/dx (dot(a_i, x) - b_i)^2 =
-2(dot(a_i, x) - b_i) a_i
+d/dx fx = d/dx (dot(a_i, x) - b_i)^2 = 2(dot(a_i, x) - b_i) a_i
 ```
 
 Casting this in terms of
@@ -567,7 +566,6 @@ void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_
     // out.size() == local_model.size()
     out[0] = 0;
 }
-```
 
 // h_bar_j(x) = 2(a_i * x - b_i) a_i
 // We can just precompute the each h_bar_j directly.
