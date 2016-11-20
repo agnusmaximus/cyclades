@@ -312,7 +312,7 @@ In the least squares problem we are interested in minimizing the
 function `||Ax-b||^2`. A data point in this sense is a row of `A`
 which we refer to as `a_i`, and the model we are optimizing is
 `x`. Note that minimizing `||Ax-b||^2` is equivalent to minimizing
-`sum (dot(a_i, x) - b)^2`.
+`sum (dot(a_i, x) - b_i)^2`.
 
 For the purposes of this example, we will name our least squares model
 `SimpleLSModel` and our least squares datapoint
@@ -395,12 +395,13 @@ public:
 `weights[i]` will contain the value of the row of `A` at the index
 specified `coordinates[i]`. This is a sparse representation of a row
 of a matrix. `label` will be the corresponding `b_i` of the row
-specified by the data point. The Cyclades framework does not require a
-`label` variable, but it will be used by the model when computing gradients.
+specified by the data point.
+
+Note that the Cyclades framework does not require a `label` variable,
+but it will be used by the model when computing gradients.
 
 To read the datapoint values from a line of the input file, we
-implement the constructor to read according to the format. Ignore the
-`order` parameter.
+implement the constructor to read according to the format.
 
 ```c++
 SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
@@ -452,8 +453,9 @@ public:
     std::vector<double> x;
 };
 ```
-Initialization with the data input line from the constructor is similar to the
-process in `SimpleLSDatapoint`.
+
+Initialization with the data input line from the constructor follows a
+similar process to that in `SimpleLSDatapoint`.
 
 ```c++
 SimpleLSModel(const std::string &input_line) {
@@ -477,9 +479,9 @@ SimpleLSModel(const std::string &input_line) {
 Here we additionally allocate enough memory to hold the model `x` and
 furthermore randomly initialize its values.
 
-It is convenient to define a dot product operation which computes the
-dot product between a row specified by `SimpleLSDatapoint` and the
-model.
+For this problem, it is also convenient to define a dot product
+operation which computes the dot product between a row specified by
+`SimpleLSDatapoint` and the raw model.
 
 ```c++
 double dot(SimpleLSDatapoint *a_i, std::vector<double> &x) {
@@ -493,8 +495,8 @@ double dot(SimpleLSDatapoint *a_i, std::vector<double> &x) {
 }
 ```
 
-Computing the loss is iterating through the data points and summing up
-`(dot(a_i, x) - b)^2`.
+Computing the loss requires iterating through the data points and summing up
+`(dot(a_i, x) - b_i)^2`.
 ```c++
 // Minimize loss = sum (a_i * x - b)^2.
 double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
@@ -519,4 +521,274 @@ double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
 
     return loss / datapoints.size();
 }
+```
+
+Since each coordinate of `x` is a scalar value,  `CoordinateSize` should return 1.
+```c++
+int CoordinateSize() override {
+    // Each coordinate in the model is a single scalar.
+    return 1;
+}
+```
+
+Additionally we indicate the size of the model, and allow the updaters a reference to the raw data.
+```c++
+int NumParameters() override {
+    return x.size();
+}
+
+std::vector<double> &ModelData() override {
+    return x;
+}
+```
+
+To define `Lambda`, `H_bar`, `Kappa`, recall the gradient at a
+datapoint is `d/dx(fx) = d/dx (dot(a_i, x) - b_i)^2` = `2(dot(a_i, x)
+- b_i) a_i`. Casting this in terms of `[∇f(x)]_j = λ_j * x_j − κ_j +
+h_bar_j(x)` indicates that `λ_j = 0`, `x_j = 0` and `h_bar_j(x) =
+2(dot(a_i, x) - b_i) a_i`.
+
+```c++
+void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
+    out = 0;
+}
+
+void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+    // out.size() == local_model.size()
+    out[0] = 0;
+}
+```
+
+// h_bar_j(x) = 2(a_i * x - b_i) a_i
+// We can just precompute the each h_bar_j directly.
+void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
+    // We need to make sure g->coeffs can store the gradient to the model (since we are storing a scalar).
+    if (g->coeffs.size() != 1) g->coeffs.resize(NumParameters());
+
+    // Compute 2(a_i * x - b_i).
+    SimpleLSDatapoint *a_i = (SimpleLSDatapoint *)datapoint;
+    double b_i = a_i->label;
+    double coefficient = 2 * (dot(a_i, local_model) - b_i);
+
+    // For each nnz weight of the data point, set g->coeffs appropriately.
+    for (int i = 0; i < datapoint->GetNumCoordinateTouches(); i++) {
+        int index = datapoint->GetCoordinates()[i];
+        double weight = datapoint->GetWeights()[i];
+        g->coeffs[index] = coefficient * weight;
+    }
+}
+
+// Since g->coeffs[coordinate] = 2(a_i * x - b_i) a_i, we can set out[0] to be g->coeffs[coordinate]
+void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
+    out[0] = g->coeffs[coordinate];
+}
+```
+
+Note that in this example, although we precompute the whole gradient
+directly in `PrecomputeCoefficients`, there are cases where it is
+necessary / more efficient to do part of the computation in
+`PrecomputeCoefficients` and the rest in `H_bar`.
+
+Furthermore note that `g->coeffs` is not zeroed out between gradient
+computations, so it may be filled with junk value. This also means
+that the resizing of `g->coeffs` is only done once per thread.
+
+### Putting It All Together
+
+Finally, we can add a call to `Run` in the main function to trigger optimization.
+```c++
+int main(int argc, char **argv) {
+    // Initialize gflags
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+    Run<SimpleLSModel, SimpleLSDatapoint>();
+}
+```
+
+Here is our final source code.
+
+```c++
+#include <iostream>
+#include <vector>
+#include "../src/run.h"
+#include "../src/defines.h"
+
+/* Minimize the equation sum (a_i x - b_i)^2
+ * Each row of the A matrix (a_i) is represented by a single data point.
+ * Also store b_i for each corresponding a_i.
+ */
+class SimpleLSDatapoint : public Datapoint {
+public:
+    std::vector<double> weights;
+    std::vector<int> coordinates;
+    double label;
+
+    SimpleLSDatapoint(const std::string &input_line, int order) : Datapoint(input_line, order) {
+	// Create a string stream from the input line.
+	// This lets us read from the line as if reading via cin.
+	std::stringstream in(input_line);
+
+	// We expect a sparse row from the A matrix, a_i, as well as the
+	// corresponding value of b_i. The first value of the line is the number
+	// of nnz values in the row of the matrix.
+	// E.g:
+	// n index_1 value_1 index_2 value_2 .... index_n value_n label
+	int n;
+	in >> n;
+	weights.resize(n);
+	coordinates.resize(n);
+	for (int i = 0; i < n; i++) {
+	    in >> coordinates[i];
+	    in >> weights[i];
+	}
+	in >> label;
+    }
+
+    std::vector<double> & GetWeights() override {
+	return weights;
+    }
+
+    std::vector<int> & GetCoordinates() override {
+	return coordinates;
+    }
+
+    int GetNumCoordinateTouches() override {
+	return coordinates.size();
+    }
+};
+
+/* Minimize the equation sum (a_i x - b_i)^2
+ * Represents the x model.
+ *
+ * The gradient at a datapoint a_i is
+ * d/dx f(x) = 2(a_i * x - b_i) x.
+ * Therefore, in terms of [∇f(x)]_j = λ_j * x_j − κ_j + h_bar_j(x),
+ * which defines the gradient at a datapoint at a coordinate j of the model,
+ * we have λ_j = 0, x_j = 0, h_bar_j(x) = 2(a_i * x - b_i) a_i.
+ *
+ */
+class SimpleLSModel : public Model {
+private:
+    double dot(SimpleLSDatapoint *a_i, std::vector<double> &x) {
+	double product = 0;
+	for (int i = 0; i < a_i->GetNumCoordinateTouches(); i++) {
+	    int index = a_i->GetCoordinates()[i];
+	    double value = a_i->GetWeights()[i];
+	    product += value * x[index];
+	}
+	return product;
+    }
+
+public:
+    std::vector<double> x;
+
+    SimpleLSModel(const std::string &input_line) {
+	// Create a string stream from the input line.
+	// This lets us read from the line as if reading via cin.
+	std::stringstream in(input_line);
+
+	// We expect a single integer describing the number
+	// of coordinates of the model.
+	int num_coordinates;
+	in >> num_coordinates;
+
+	// Preallocate the x model and randomly initialize.
+	x.resize(num_coordinates);
+	for (int i = 0; i < x.size(); i++) {
+	    x[i] = ((double)rand()/(double)RAND_MAX);
+	}
+    }
+
+    // Minimize loss = sum (a_i * x - b)^2.
+    double ComputeLoss(const std::vector<Datapoint *> &datapoints) override {
+	double loss = 0;
+
+	// Note that ComputeLoss is called by a SINGLE thread.
+	// It is possible to parallelize this via
+	// #pragma omp parallel for
+	for (int i = 0; i < datapoints.size(); i++) {
+	    SimpleLSDatapoint *a_i = (SimpleLSDatapoint *)datapoints[i];
+	    double b_i = a_i->label;
+	    double dot_product = dot(a_i, x);
+	    loss += (dot_product - b_i) * (dot_product - b_i);
+	}
+
+	std::cout << "Model Parameters: " << std::endl;
+	for (int i = 0; i < NumParameters(); i++) {
+	    std::cout << x[i] << " ";
+	}
+	std::cout << std::endl;
+
+	return loss / datapoints.size();
+    }
+
+    int NumParameters() override {
+	return x.size();
+    }
+
+    int CoordinateSize() override {
+	// Each coordinate in the model is a single scalar.
+	return 1;
+    }
+
+    std::vector<double> &ModelData() override {
+	return x;
+    }
+
+    void Lambda(int coordinate, double &out, std::vector<double> &local_model) override {
+	out = 0;
+    }
+
+    void Kappa(int coordinate, std::vector<double> &out, std::vector<double> &local_model) override {
+	out[0] = 0;
+    }
+
+    // h_bar_j(x) = 2(a_i * x - b_i) a_i
+    // We can just precompute the each h_bar_j directly.
+    void PrecomputeCoefficients(Datapoint *datapoint, Gradient *g, std::vector<double> &local_model) override {
+	// We need to make sure g->coeffs can store the gradient to the model (since we are storing a scalar).
+	if (g->coeffs.size() != 1) g->coeffs.resize(NumParameters());
+
+	// Compute 2(a_i * x - b_i).
+	SimpleLSDatapoint *a_i = (SimpleLSDatapoint *)datapoint;
+	double b_i = a_i->label;
+	double coefficient = 2 * (dot(a_i, local_model) - b_i);
+
+	// For each nnz weight of the data point, set g->coeffs appropriately.
+	for (int i = 0; i < datapoint->GetNumCoordinateTouches(); i++) {
+	    int index = datapoint->GetCoordinates()[i];
+	    double weight = datapoint->GetWeights()[i];
+	    g->coeffs[index] = coefficient * weight;
+	}
+    }
+
+    // Since g->coeffs[0] = 2(a_i * x - b_i),
+    // The gradient is g->coeffs[0] * a_ij (i'th datapoint, j'th
+    void H_bar(int coordinate, std::vector<double> &out, Gradient *g, std::vector<double> &local_model) override {
+	out[0] = g->coeffs[coordinate];
+    }
+};
+
+int main(int argc, char **argv) {
+    std::cout << "Simple least squares custom optimization example:" << std::endl;
+    std::cout << "Minimize the equation ||Ax-b||^2 = Minimize Sum (a_i x - b_i)^2" << std::endl;
+
+    // Initialize gflags
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+    Run<SimpleLSModel, SimpleLSDatapoint>();
+}
+```
+
+The github repository contains the `simple_ls` target which builds and
+compiles the above example. To compile, do
+
+```c++
+make simple_ls
+```
+
+To run do
+
+```c++
+./simple_ls --sparse_sgd --n_epochs=10  --learning_rate=1e-1 --print_loss_per_epoch --cyclades_trainer --n_threads=1 --data_file='./examples/simple_ls_data'
 ```
