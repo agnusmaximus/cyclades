@@ -56,8 +56,8 @@ Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 <br/>
 
 <div align="center">
-<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Graph%20Eigenvalues%202%20threads%20-%20NH2010.png" width="350" height="375"/>
-<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Graph%20Eigenvalues%20Speedup%20-%20NH2010.png" width="350" height="375"/>
+<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Graph%20Eigenvalues%202%20threads%20-%20NH2010.png" width="400" height="425"/>
+<img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Graph%20Eigenvalues%20Speedup%20-%20NH2010.png" width="400" height="425"/>
 </div>
 <em> On multithread SVRG, by avoiding conflicts Cyclades achieves an objective loss value much faster than Hogwild.</em>
 
