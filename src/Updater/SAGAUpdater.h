@@ -82,8 +82,8 @@ class SAGAUpdater: public Updater {
 	int dp_order = datapoint->GetOrder()-1;
 	for (const auto &index : datapoint->GetCoordinates()) {
 	    for (int i = 0; i < model->CoordinateSize(); i++) {
-		GET_GLOBAL_VECTOR(sum_gradients)[index][i] += -GET_THREAD_LOCAL_VECTOR(h)[index][i] - prev_gradients[dp_order][index][i];
-		prev_gradients[dp_order][index][i] = -GET_THREAD_LOCAL_VECTOR(h)[index][i];
+		GET_GLOBAL_VECTOR(sum_gradients)[index][i] += GET_THREAD_LOCAL_VECTOR(h)[index][i] - prev_gradients[dp_order][index][i];
+		prev_gradients[dp_order][index][i] = GET_THREAD_LOCAL_VECTOR(h)[index][i];
 	    }
 	}
     }
