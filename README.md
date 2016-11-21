@@ -53,6 +53,8 @@ height="400" width="525" ></div> <em> On multithread SAGA, the
 serializability of Cyclades allows it to use a larger stepsize than
 Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. </em>
 
+<br/>
+<div> </div>
 
 <div align="center">
 <img src="https://raw.github.com/agnusmaximus/cyclades/master/images/Graph%20Eigenvalues%202%20threads%20-%20NH2010.png" width="425" height="450"/>
