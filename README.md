@@ -54,7 +54,7 @@ height="400" width="525" ></div>
 serializability of Cyclades allows it to use a larger stepsize than
 Hogwild. With higher stepsizes, Hogwild diverges due to conflicts. <br/></em>
 
-<div align="center" style="padding-top: 20px">
+<div align="center" style="margin-top:20px">
 <img src="https://raw.github.com/agnusmaximus/cyclades/master/images/SVRG%20Graph%20Eigenvalues%202%20threads%20-%20NH2010.png" width="425" height="450"/>
 <img src="https://raw.github.com/agnusmaximus/cyclades/master/images/SVRG%20Graph%20Eigenvalues%20Speedup%20-%20NH2010.png" width="425" height="450"/>
 </div>
